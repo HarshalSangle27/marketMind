@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center flex-grow-1 py-5 animate-in delay-1" style="min-height: 80vh;">
+    <div class="glass-panel p-5 position-relative overflow-hidden" style="width: 100%; max-width: 450px; border-radius: 24px;">
+        <!-- Glowing Orb Background -->
+        <div class="position-absolute top-0 start-50 translate-middle w-100 h-100 opacity-50" style="background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%); pointer-events: none; z-index: 0;"></div>
+        
+        <div class="text-center mb-5 position-relative z-1">
+            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3 border border-primary border-opacity-25" style="width: 64px; height: 64px;">
+                <i class="bi bi-person-circle fs-1"></i>
+            </div>
+            <h2 class="fw-bold text-white mb-2">Welcome Back</h2>
+            <p class="text-secondary small">Login to access your AI predictions</p>
+        </div>
+
+        <form method="POST" class="position-relative z-1">
+            <div class="mb-4">
+                <label class="text-secondary small fw-medium mb-2 ms-1">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text border-end-0 px-3"><i class="bi bi-envelope text-secondary"></i></span>
+                    <input type="email" name="email" class="form-control border-start-0 ps-0 py-2 fs-6 shadow-none" placeholder="name@example.com" required>
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <label class="text-secondary small fw-medium mb-2 ms-1">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text border-end-0 px-3"><i class="bi bi-lock text-secondary"></i></span>
+                    <input type="password" name="password" class="form-control border-start-0 ps-0 py-2 fs-6 shadow-none" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fw-bold fs-6 shadow-lg hover-scale">Proceed to Dashboard <i class="bi bi-arrow-right ms-2 fs-5 align-middle"></i></button>
+        </form>
+
+        <div class="text-center mt-4 position-relative z-1">
+            <small class="text-secondary">New to MarketMind? <a href="{{ url_for('auth.signup') }}" class="text-primary fw-bold text-decoration-none border-bottom border-primary border-opacity-50 pb-1 hover-text-white transition-all">Create an account</a></small>
+        </div>
+    </div>
+</div>
+{% endblock %}

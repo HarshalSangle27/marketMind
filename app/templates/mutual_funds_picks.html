@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block body_class %}body-mutual-funds{% endblock %}
+{% block content %}
+<div class="container py-4 animate-in delay-1">
+    
+    <!-- Header -->
+    <div class="glass-panel mb-4 p-4 border-0 position-relative overflow-hidden" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);">
+        <div class="position-absolute top-0 start-50 translate-middle w-100 h-100" style="background: radial-gradient(circle, rgba(var(--bs-success-rgb), 0.15) 0%, transparent 70%); pointer-events: none;"></div>
+        
+        <div class="d-flex align-items-center mb-2 position-relative z-1">
+            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex justify-content-center align-items-center me-3 border border-success border-opacity-25" style="width: 48px; height: 48px; border-width: 2px !important;">
+                <i class="bi bi-safe fs-4"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold text-white mb-0">Mutual Fund Picks</h2>
+                <p class="text-secondary mb-0">AI-suggested low-risk portfolios for steady growth</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel overflow-hidden p-0 animate-in delay-2">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 align-middle" style="background: transparent;">
+                <thead style="background: rgba(15, 23, 42, 0.9);">
+                    <tr>
+                        <th class="py-3 px-4 border-0 text-secondary fw-semibold">Fund Name</th>
+                        <th class="py-3 px-4 border-0 text-secondary fw-semibold">Category</th>
+                        <th class="py-3 px-4 border-0 text-secondary fw-semibold">Risk Level</th>
+                        <th class="py-3 px-4 border-0 text-secondary fw-semibold">AI Conviction</th>
+                        <th class="py-3 px-4 border-0 text-secondary fw-semibold text-end">Projected 1Y CAGR</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    <tr class="transition-all hover-bg-light">
+                        <td class="py-3 px-4 border-secondary border-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ 'Parag Parikh Flexi Cap Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
+                                <div>
+                                    <span class="d-block fw-bold text-white mb-0">Parag Parikh Flexi Cap Fund</span>
+                                    <small class="text-secondary">Equity</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Flexi Cap</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-warning fw-medium">Moderate</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10">High</td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+18.5%</td>
+                    </tr>
+                    <tr class="transition-all hover-bg-light">
+                        <td class="py-3 px-4 border-secondary border-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ 'Quant Small Cap Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
+                                <div>
+                                    <span class="d-block fw-bold text-white mb-0">Quant Small Cap Fund</span>
+                                    <small class="text-secondary">Equity</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Small Cap</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-danger fw-medium">High</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10">Medium</td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+24.2%</td>
+                    </tr>
+                    <tr class="transition-all hover-bg-light">
+                        <td class="py-3 px-4 border-secondary border-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ 'ICICI Pru Nifty 50 Index Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
+                                <div>
+                                    <span class="d-block fw-bold text-white mb-0">ICICI Pru Nifty 50 Index Fund</span>
+                                    <small class="text-secondary">Index</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Large Cap</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-success fw-medium">Low</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10">Very High</td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+14.1%</td>
+                    </tr>
+                    <tr class="transition-all hover-bg-light">
+                        <td class="py-3 px-4 border-secondary border-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ 'Nippon India Small Cap Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
+                                <div>
+                                    <span class="d-block fw-bold text-white mb-0">Nippon India Small Cap Fund</span>
+                                    <small class="text-secondary">Equity</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Small Cap</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-danger fw-medium">High</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10">Medium</td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+27.4%</td>
+                    </tr>
+                    <tr class="transition-all hover-bg-light">
+                        <td class="py-3 px-4 border-secondary border-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ 'SBI Contra Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
+                                <div>
+                                    <span class="d-block fw-bold text-white mb-0">SBI Contra Fund</span>
+                                    <small class="text-secondary">Equity</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Contra</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-warning fw-medium">Moderate</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10">High</td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+21.0%</td>
+                    </tr>
+                    <tr class="transition-all hover-bg-light">
+                        <td class="py-3 px-4 border-secondary border-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ 'HDFC Mid-Cap Opportunities Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
+                                <div>
+                                    <span class="d-block fw-bold text-white mb-0">HDFC Mid-Cap Opportunities Fund</span>
+                                    <small class="text-secondary">Equity</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Mid Cap</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-warning fw-medium">Moderate</span></td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10">High</td>
+                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+19.5%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

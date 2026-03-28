@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block body_class %}body-home{% endblock %}
+
+{% block content %}
+<div class="container py-4 animate-in delay-1">
+    
+    <!-- Hero / Search Section -->
+    <div class="mb-5 mt-3">
+        <h2 class="fw-bold text-white mb-4">What are you looking for today?</h2>
+        <div class="search-wrapper position-relative" style="max-width: 800px;">
+            <form action="{{ url_for('stocks.home') }}" method="POST" id="searchForm" class="no-loader">
+                <div class="input-group p-1" style="border-radius: 12px; background: rgba(30,30,30,0.6); border: 1px solid rgba(255,255,255,0.1);">
+                    <span class="input-group-text bg-transparent border-0 text-secondary ps-3"><i class="bi bi-search"></i></span>
+                    <input type="text" name="ticker" id="stockInput" class="form-control bg-transparent border-0 text-white shadow-none py-2 px-2 fs-6" placeholder="Search eg: RELIANCE, AAPL, TCS..." autocomplete="off" required>
+                </div>
+                <!-- Suggestions Dropdown (High Z-Index) -->
+                <div id="suggestions" class="text-start position-absolute w-100 mt-1 d-none shadow-lg p-2" style="border-radius: 12px; z-index: 1050; background: #1e1e1e; border: 1px solid rgba(255,255,255,0.1);"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Market Health Overview (replaces similar-looking indices cards) -->
+    <div class="mb-5 animate-in delay-1">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0 text-white">Market Health (NIFTY 50)</h5>
+            <span id="marketStatusBadge" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1"><i class="bi bi-circle-fill small me-1" style="font-size: 8px;"></i>Checking...</span>
+        </div>
+        
+        <div class="glass-panel p-4 position-relative overflow-hidden" style="background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(239, 68, 68, 0.05) 100%);">
+            
+            <div class="d-flex align-items-center justify-content-between position-relative z-1 w-100 mb-3">
+                <div class="text-start">
+                    <h3 class="text-success fw-bold mb-0">{{ market_health.advances }}</h3>
+                    <small class="text-secondary text-uppercase fw-semibold" style="letter-spacing: 1px; font-size: 0.75rem;">Advances</small>
+                </div>
+                
+                <div class="text-center px-4 d-none d-md-block">
+                    <p class="text-white fw-bold mb-0 fs-5">{{ market_health.text }}</p>
+                </div>
+                
+                <div class="text-end">
+                    <h3 class="text-danger fw-bold mb-0">{{ market_health.declines }}</h3>
+                    <small class="text-secondary text-uppercase fw-semibold" style="letter-spacing: 1px; font-size: 0.75rem;">Declines</small>
+                </div>
+            </div>
+
+            <div class="position-relative z-1 w-100">
+                <div class="progress" style="height: 10px; background-color: #1e293b; border-radius: 20px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ market_health.adv_pct }}%;" aria-valuenow="{{ market_health.adv_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ market_health.dec_pct }}%;" aria-valuenow="{{ market_health.dec_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    {% if current_user.is_authenticated and recent_stocks %}
+    <!-- Recently Viewed Stocks (Custom Dashboard) -->
+    <div class="mb-5 animate-in delay-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0 text-white"><i class="bi bi-clock-history me-2 text-primary"></i>Your Recently Viewed Stocks</h5>
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">Personalized</span>
+        </div>
+        
+        <div class="row g-3">
+            {% for stock in recent_stocks %}
+            <div class="col-lg-3 col-md-4 col-sm-6 col-12 recent-stock-item">
+                <div class="p-3 rounded-3 h-100 transition-all hover-scale position-relative" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(255,255,255,0.05);">
+                    
+                    <!-- Remove Button -->
+                    <button class="btn btn-sm btn-link text-secondary p-0 position-absolute end-0 top-0 m-2 remove-recent-btn" data-ticker="{{ stock.symbol }}" style="z-index: 5;">
+                        <i class="bi bi-x-lg text-white-50 hover-text-danger"></i>
+                    </button>
+
+                    <!-- Clickable Link covering the rest -->
+                    <a href="{{ url_for('stocks.dashboard', ticker=stock.symbol) }}" class="text-decoration-none load-trigger d-block h-100">
+                        <div class="d-flex align-items-center mb-2 pe-4">
+                            <img src="{{ stock.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ stock.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
+                            <div>
+                                <h6 class="fw-bold text-white mb-0 text-truncate" style="max-width: 130px;">{{ stock.name }}</h6>
+                                <small class="text-secondary" style="font-size: 0.75rem;">{{ stock.symbol }}</small>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-end">
+                            <div class="d-flex justify-content-between align-items-end mb-1">
+                                <small class="text-secondary" style="font-size: 0.65rem; letter-spacing: 0.5px;">PREV</small>
+                                <span class="text-secondary text-decoration-line-through" style="font-size: 0.8rem;">{{ stock.old_price_str }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-end mb-2">
+                                <small class="text-white-50" style="font-size: 0.65rem; letter-spacing: 0.5px;">NOW</small>
+                                <span class="fw-bold text-white fs-5 lh-1" style="letter-spacing: -0.5px;">{{ stock.current_price_str }}</span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge bg-{{ 'success' if 'success' in stock.color else 'danger' }} bg-opacity-10 py-1 px-2 rounded-2 border border-{{ 'success' if 'success' in stock.color else 'danger' }} border-opacity-25 d-inline-flex align-items-center">
+                                {% if 'success' in stock.color %} <i class="bi bi-graph-up-arrow me-1 small"></i> {% else %} <i class="bi bi-graph-down-arrow me-1 small"></i> {% endif %}
+                                {{ stock.change }} <span class="ms-1 opacity-75">({{ stock.pct_change }}%)</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Trending Stocks -->
+    <div class="mb-5 animate-in delay-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0 text-white">Trending Stocks</h5>
+        </div>
+        
+        <div class="row g-3">
+            {% for stock in trending_stocks %}
+            <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                <a href="{{ url_for('stocks.dashboard', ticker=stock.symbol) }}" class="text-decoration-none load-trigger">
+                    <div class="p-3 rounded-3 h-100 transition-all hover-bg-light" style="background: rgba(30,30,30,0.4); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{{ stock.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ stock.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
+                            <div>
+                                <h6 class="fw-bold text-white mb-0 text-truncate" style="max-width: 120px;">{{ stock.name }}</h6>
+                                <small class="text-secondary" style="font-size: 0.75rem;">{{ stock.symbol }}</small>
+                            </div>
+                        </div>
+                        <div class="mt-auto">
+                            <div class="fw-bold text-white mb-1">{{ stock.price }}</div>
+                            <div class="text-{{ 'success' if 'success' in stock.color else 'danger' }} small">
+                                {{ stock.pct_change }}%
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- More Sections (Discover More & News) -->
+    <div class="row g-4 mb-5 animate-in delay-3">
+        <div class="col-md-6 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0 text-white">Top Highlights & News</h5>
+            </div>
+            <div class="d-flex flex-column gap-3 flex-grow-1 h-100">
+                {% if market_news %}
+                    {% for n in market_news %}
+                    <a href="{{ n.link }}" target="_blank" class="text-decoration-none d-block h-100 pt-1">
+                        <div class="d-flex gap-3 align-items-center p-3 rounded-3 transition-all hover-bg-light h-100" style="background: rgba(30,30,30,0.4); border: 1px solid rgba(255,255,255,0.05);">
+                            <div>
+                                <h6 class="text-white mb-1 fw-medium lh-sm" style="font-size: 0.95rem;">{{ n.title }}</h6>
+                                <small class="text-secondary text-truncate d-block" style="max-width: 300px;">via {{ n.publisher }}</small>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <!-- Fallback if no news fetched -->
+                    <div class="text-center p-4">
+                        <small class="text-secondary">No recent news available.</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-6 d-flex flex-column">
+            <h5 class="fw-bold mb-3 text-white">AI Tools & Insights</h5>
+            <div class="row g-3 h-100">
+                <div class="col-6">
+                    <a href="{{ url_for('stocks.ai_picks') }}" class="text-decoration-none load-trigger h-100 d-block">
+                        <div class="p-4 rounded-3 h-100 text-center transition-all hover-scale d-flex flex-column justify-content-center align-items-center" style="background: rgba(30,30,30,0.4); border: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                            <i class="bi bi-stars text-primary fs-2 mb-2"></i>
+                            <h6 class="text-white mb-1 fw-bold">AI Top Picks</h6>
+                            <small class="text-secondary" style="font-size: 0.75rem;">Algorithmic Suggestions</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{{ url_for('stocks.mutual_funds_picks') }}" class="text-decoration-none load-trigger h-100 d-block">
+                        <div class="p-4 rounded-3 h-100 text-center transition-all hover-scale d-flex flex-column justify-content-center align-items-center" style="background: rgba(30,30,30,0.4); border: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                            <i class="bi bi-safe text-success fs-2 mb-2"></i>
+                            <h6 class="text-white mb-1 fw-bold">Mutual Funds</h6>
+                            <small class="text-secondary" style="font-size: 0.75rem;">AI Suggested Portfolio</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{{ url_for('stocks.sentiment') }}" class="text-decoration-none load-trigger h-100 d-block">
+                        <div class="p-4 rounded-3 h-100 text-center transition-all hover-scale d-flex flex-column justify-content-center align-items-center" style="background: rgba(30,30,30,0.4); border: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                            <i class="bi bi-emoji-heart-eyes text-warning fs-2 mb-2"></i>
+                            <h6 class="text-white mb-1 fw-bold">Market Sentiment</h6>
+                            <small class="text-secondary" style="font-size: 0.75rem;">Global News Analysis</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{{ url_for('stocks.strategies') }}" class="text-decoration-none load-trigger h-100 d-block">
+                        <div class="p-4 rounded-3 h-100 text-center transition-all hover-scale d-flex flex-column justify-content-center align-items-center" style="background: rgba(30,30,30,0.4); border: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                            <i class="bi bi-diagram-3 text-info fs-2 mb-2"></i>
+                            <h6 class="text-white mb-1 fw-bold">Strategies</h6>
+                            <small class="text-secondary" style="font-size: 0.75rem;">Trading Guidelines</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Handle recent stock removal
+    document.querySelectorAll('.remove-recent-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const ticker = this.getAttribute('data-ticker');
+            const cardItem = this.closest('.recent-stock-item');
+            
+            // Optional: Give it an animating exit out
+            cardItem.style.transition = 'all 0.3s ease';
+            cardItem.style.opacity = '0';
+            cardItem.style.transform = 'scale(0.9)';
+            
+            fetch("{{ url_for('stocks.home') }}".replace('/', '/remove_history/') + ticker, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    setTimeout(() => {
+                        cardItem.remove(); // Remove from DOM
+                        
+                        // Check if any recent stocks are left
+                        const remaining = document.querySelectorAll('.recent-stock-item');
+                        if(remaining.length === 0) {
+                            // Reload the page to show trending stocks
+                            window.location.reload();
+                        }
+                    }, 300);
+                } else {
+                    cardItem.style.opacity = '1';
+                    cardItem.style.transform = 'scale(1)';
+                }
+            })
+            .catch(err => {
+                console.error("Failed to remove", err);
+                cardItem.style.opacity = '1';
+                cardItem.style.transform = 'scale(1)';
+            });
+        });
+    });
+
+    const stocks = [
+        { s: "RELIANCE.NS", n: "Reliance Industries" }, { s: "TCS.NS", n: "Tata Consultancy" },
+        { s: "HDFCBANK.NS", n: "HDFC Bank" }, { s: "INFY.NS", n: "Infosys" },
+        { s: "PAYTM.NS", n: "Paytm" },
+        { s: "AAPL", n: "Apple Inc" }, { s: "TSLA", n: "Tesla" },
+        { s: "BTC-USD", n: "Bitcoin" }
+    ];
+
+    const input = document.getElementById('stockInput');
+    const box = document.getElementById('suggestions');
+    const form = document.getElementById('searchForm');
+
+    input.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        box.innerHTML = '';
+        if(query.length === 0) { box.classList.add('d-none'); box.classList.remove('d-block'); return; }
+        
+        const matches = stocks.filter(s => s.s.toLowerCase().includes(query) || s.n.toLowerCase().includes(query)).slice(0,5);
+        if(matches.length > 0){
+            box.classList.remove('d-none');
+            box.classList.add('d-block');
+            matches.forEach(match => {
+                const div = document.createElement('div');
+                div.className = 'p-2 rounded-2 mb-1 transition-all d-flex justify-content-between align-items-center';
+                div.style.cursor = 'pointer';
+                div.onmouseover = () => div.style.background = 'rgba(255,255,255,0.05)';
+                div.onmouseout = () => div.style.background = 'transparent';
+                
+                div.innerHTML = `
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-secondary bg-opacity-25 rounded-circle d-flex justify-content-center align-items-center" style="width:36px;height:36px;"><i class="bi bi-search text-secondary small"></i></div>
+                        <div>
+                            <div class="fw-medium text-white" style="font-size: 0.95rem;">${match.n}</div>
+                            <div class="text-secondary" style="font-size: 0.75rem;">${match.s} &bull; EQUITY</div>
+                        </div>
+                    </div>
+                `;
+                div.onclick = () => { input.value = match.s; box.classList.add('d-none'); document.getElementById('loadingOverlay').style.display='flex'; form.submit(); };
+                box.appendChild(div);
+            });
+        } else { box.classList.add('d-none'); }
+    });
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !box.contains(e.target)) box.classList.add('d-none');
+    });
+
+    function updateMarketStatus() {
+        const badge = document.getElementById('marketStatusBadge');
+        if (!badge) return;
+
+        // Get current time in IST
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const istTime = new Date(utc + (3600000 * 5.5)); // IST is UTC+5:30
+
+        const day = istTime.getDay();
+        const hours = istTime.getHours();
+        const minutes = istTime.getMinutes();
+        const timeInMinutes = hours * 60 + minutes;
+
+        // Market hours: Mon-Fri (1-5), 9:15 AM (555) to 3:30 PM (930)
+        const isWeekday = day >= 1 && day <= 5;
+        const isOpenMarketHours = timeInMinutes >= 555 && timeInMinutes < 930;
+
+        if (isWeekday && isOpenMarketHours) {
+            badge.className = "badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1";
+            badge.innerHTML = '<i class="bi bi-circle-fill small me-1" style="font-size: 8px;"></i>Market Open';
+        } else {
+            badge.className = "badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1";
+            badge.innerHTML = '<i class="bi bi-circle-fill small me-1" style="font-size: 8px;"></i>Market Closed';
+        }
+    }
+
+    updateMarketStatus();
+    setInterval(updateMarketStatus, 60000);
+</script>
+<style>
+    .hover-bg-light:hover { background: rgba(40,40,40,0.6) !important; cursor: pointer; }
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.02); }
+    .hover-text-danger:hover { color: #ef4444 !important; }
+</style>
+{% endblock %}

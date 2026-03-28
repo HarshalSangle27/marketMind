@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block body_class %}body-ai-picks{% endblock %}
+{% block content %}
+<div class="container py-4 animate-in delay-1">
+    
+    <!-- Header -->
+    <div class="glass-panel mb-4 p-4 border-0 position-relative overflow-hidden" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);">
+        <div class="position-absolute top-0 start-50 translate-middle w-100 h-100" style="background: radial-gradient(circle, rgba(var(--bs-primary-rgb), 0.15) 0%, transparent 70%); pointer-events: none;"></div>
+        
+        <div class="d-flex align-items-center mb-2 position-relative z-1">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-3 border border-primary border-opacity-25" style="width: 48px; height: 48px; border-width: 2px !important;">
+                <i class="bi bi-stars fs-4"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold text-white mb-0">AI Top Picks</h2>
+                <p class="text-secondary mb-0">Algorithmic stock suggestions for highest potential returns</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Picks List -->
+    <div class="row g-4 mb-5">
+        {% if top_picks %}
+            {% for pick in top_picks %}
+            <div class="col-md-6 col-lg-4">
+                {% set border_color = 'rgba(16, 185, 129, 0.2)' %}
+                {% set badge_icon = 'bi-check-circle' %}
+                {% if pick.verdict_color == 'success' %}
+                    {% set border_color = 'rgba(16, 185, 129, 0.2)' %}
+                    {% set badge_icon = 'bi-robot' %}
+                {% elif pick.verdict_color == 'primary' or pick.verdict_color == 'info' %}
+                    {% set border_color = 'rgba(14, 165, 233, 0.2)' %}
+                    {% set badge_icon = 'bi-check-circle' %}
+                {% elif pick.verdict_color == 'warning' %}
+                    {% set border_color = 'rgba(245, 158, 11, 0.2)' %}
+                    {% set badge_icon = 'bi-dash-circle' %}
+                {% elif pick.verdict_color == 'danger' %}
+                    {% set border_color = 'rgba(239, 68, 68, 0.2)' %}
+                    {% set badge_icon = 'bi-exclamation-octagon' %}
+                {% endif %}
+                
+                <div class="glass-panel p-4 h-100 transition-all hover-scale position-relative overflow-hidden" style="border: 1px solid {{ border_color }};">
+
+                    
+                    <div class="d-flex align-items-center mb-3 mt-3">
+                        <img src="{{ pick.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ pick.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 me-3 border border-secondary border-opacity-25 shadow-sm" style="width: 48px; height: 48px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
+                        <div>
+                            <h3 class="fw-bold text-white mb-0 h5">{{ pick.symbol.replace('.NS', '') }}</h3>
+                            <p class="text-secondary small mb-0 text-truncate" style="max-width: 180px;">{{ pick.name }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div>
+                            <small class="text-secondary d-block mb-1">Expected Return (1M)</small>
+                            <h4 class="text-{{ pick.trend_color }} fw-bold m-0">{% if pick.change_percent > 0 %}+{% endif %}{{ pick.change_percent }}%</h4>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-secondary d-block mb-1">Confidence Rating</small>
+                            <h5 class="text-white m-0">{{ pick.sentiment_score }}/100</h5>
+                        </div>
+                    </div>
+                    
+                    <a href="{{ url_for('stocks.predict', ticker=pick.symbol) }}" class="btn btn-outline-primary w-100 rounded-pill py-2 fw-medium">View Analysis</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Loading/Fallback State -->
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <h5 class="text-white">Generating AI Recommendations...</h5>
+                <p class="text-secondary">Please wait while our models analyze the latest market data.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

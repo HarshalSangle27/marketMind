@@ -1,0 +1,25 @@
+# Sensitive Information
+.env
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDEs
+.vscode/
+.idea/
+
+# Database / Instance folder
+instance/
+*.sqlite3
+*.db
+
+# OS Generated
+.DS_Store
+Thumbs.db

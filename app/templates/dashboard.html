@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% block body_class %}body-home{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 px-4 py-4 animate-in delay-1">
+
+    <!-- Top Header Card -->
+    <div class="glass-panel mb-4 p-4 border-0 position-relative overflow-hidden"
+        style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);">
+
+        <div class="row align-items-center position-relative z-1">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <img src="{{ stock_data.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ stock_data.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 shadow" style="width: 56px; height: 56px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
+                    <h1 class="fw-bold mb-0 text-white display-5">{{ stock_data.symbol }}</h1>
+                    <span class="badge badge-glass px-3 py-2 text-primary border-primary border-opacity-50"><i
+                            class="bi bi-currency-exchange me-1"></i>{{ stock_data.currency }}</span>
+                </div>
+                <p class="text-secondary mb-0 fs-5">{{ stock_data.name }}</p>
+            </div>
+            <div class="col-md-6 text-md-end mt-4 mt-md-0">
+                <div class="display-3 fw-bold {{ stock_data.color }} mb-1" style="letter-spacing: -1px;">{{
+                    stock_data.price }}</div>
+                <div class="fs-4 {{ stock_data.color }} d-flex align-items-center justify-content-md-end">
+                    <div
+                        class="badge bg-{{ 'success' if 'success' in stock_data.color else 'danger' }} bg-opacity-10 py-2 px-3 rounded-pill border border-{{ 'success' if 'success' in stock_data.color else 'danger' }} border-opacity-25 d-inline-flex align-items-center">
+                        {% if 'success' in stock_data.color %} <i class="bi bi-graph-up-arrow me-2"></i> {% else %} <i
+                            class="bi bi-graph-down-arrow me-2"></i> {% endif %}
+                        {{ stock_data.change }} <span class="ms-2 opacity-75">({{ stock_data.pct_change }}%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+
+            <!-- Chart Panel -->
+            <div class="glass-panel mb-4 animate-in delay-2">
+                <div class="d-flex justify-content-between mb-4 align-items-center flex-wrap gap-3">
+                    <h5 class="fw-bold m-0 text-white d-flex align-items-center"><i
+                            class="bi bi-activity text-gradient me-3 fs-4"></i>Price History</h5>
+                    <div class="btn-group bg-dark bg-opacity-50 p-1 rounded-3 border border-secondary border-opacity-25"
+                        role="group">
+                        <a href="{{ url_for('stocks.dashboard', ticker=stock_data.symbol, period='2wk') }}"
+                            class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '2wk' %}active text-white bg-primary bg-opacity-25{% endif %}">2W</a>
+                        <a href="{{ url_for('stocks.dashboard', ticker=stock_data.symbol, period='1mo') }}"
+                            class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '1mo' %}active text-white bg-primary bg-opacity-25{% endif %}">1M</a>
+                        <a href="{{ url_for('stocks.dashboard', ticker=stock_data.symbol, period='6mo') }}"
+                            class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '6mo' %}active text-white bg-primary bg-opacity-25{% endif %}">6M</a>
+                    </div>
+                </div>
+                <div style="height: 400px; width: 100%; position: relative;">
+                    {% if chart_data %}
+                    <canvas id="stockChart"></canvas>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100 text-secondary">
+                        <p><i class="bi bi-exclamation-triangle me-2"></i>Chart data unavailable.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SIP Calculator -->
+            <div class="glass-panel animate-in delay-3">
+                <h5 class="fw-bold text-white mb-4 d-flex align-items-center"><i
+                        class="bi bi-calculator text-success me-3 fs-4"></i>SIP Calculator</h5>
+
+                <div class="row g-5">
+                    <div class="col-md-7">
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between text-secondary mb-2"><span>Monthly
+                                    Investment</span><span class="text-white fw-bold fs-5" id="disp_amt">{{ stock_data.currency_symbol }} 5000</span>
+                            </div>
+                            <input type="range" class="form-range" id="sip_amount" min="500" max="100000" step="500"
+                                value="5000" style="accent-color: var(--accent-blue);">
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between text-secondary mb-2"><span>How Many Years to Invest
+                                    </span><span class="text-white fw-bold fs-5" id="disp_year">5 Years</span>
+                            </div>
+                            <input type="range" class="form-range" id="sip_years" min="1" max="30" step="1" value="5"
+                                style="accent-color: var(--accent-purple);">
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between text-secondary mb-2">
+                                <span>Expected Return</span>
+                                <span class="text-success fw-bold fs-5" id="disp_rate">{{ stock_data.sip_return }}
+                                    %</span>
+                            </div>
+                            <input type="range" class="form-range" id="sip_rate" min="1" max="30" step="0.5"
+                                value="{{ stock_data.sip_return }}" style="accent-color: var(--accent-green);">
+                        </div>
+                    </div>
+
+                    <div class="col-md-5 d-flex flex-column justify-content-center">
+                        <div class="glass-panel bg-dark bg-opacity-50 border-0 p-4 text-center mb-3">
+                            <small class="text-secondary d-block text-uppercase fw-semibold mb-1"
+                                style="letter-spacing: 1px;">Total Investment</small>
+                            <h4 class="text-white mb-0" id="res_invested">{{ stock_data.currency_symbol }} 3.0 L</h4>
+                        </div>
+                        <div
+                            class="glass-panel bg-dark bg-opacity-50 border-0 p-4 text-center mb-0 position-relative overflow-hidden">
+                            <div class="position-absolute top-0 start-0 w-100 h-100 pointer-events-none"
+                                style="background: radial-gradient(circle at center, rgba(16, 185, 129, 0.1) 0%, transparent 70%);">
+                            </div>
+                            <small class="text-secondary d-block text-uppercase fw-semibold mb-1"
+                                style="letter-spacing: 1px;">Projected Value</small>
+                            <h3 class="text-success fw-bold mb-0" id="res_total">{{ stock_data.currency_symbol }} 4.1 L</h3>
+                            <div class="mt-2 small text-success opacity-75">+<span id="res_profit">{{ stock_data.currency_symbol }} 1.1 L</span>
+                                returns</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4 d-flex flex-column">
+
+            <a href="{{ url_for('stocks.predict', ticker=stock_data.symbol) }}"
+                class="text-decoration-none load-trigger animate-in delay-2">
+                <div class="glass-panel text-center p-4 mb-4 position-relative overflow-hidden shadow-lg transition-all hover-scale"
+                    style="background: var(--gradient-primary); border: none;">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-25">
+                    </div>
+
+                    <div
+                        style="background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 60%); z-index: 0; pointer-events: none;">
+                    </div>
+
+                    
+                    <h4 class="fw-bold text-white position-relative z-1 mb-1">AI Forecast</h4>
+                    <p class="text-white-50 small mb-3 position-relative z-1">Unlock autonomous market predictions</p>
+                    <div
+                        class="btn btn-light rounded-pill px-4 py-2 fw-bold text-primary shadow-sm position-relative z-1">
+                        Run Analysis <i class="bi bi-arrow-right ms-2"></i>
+                    </div>
+                </div>
+            </a>
+
+            <div class="glass-panel mb-4 animate-in delay-3">
+                <h6 class="fw-bold mb-4 text-white d-flex align-items-center"><i
+                        class="bi bi-bar-chart me-2 text-primary"></i>Market Data</h6>
+                <div class="row g-3">
+                    <div class="col-sm-6 col-6">
+                        <div
+                            class="p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100 transition-all hover-border-primary text-center">
+                            <small class="text-secondary d-block mb-1 fw-medium" style="font-size: 0.75rem;">DAY
+                                HIGH</small>
+                            <span class="fw-bold text-white fs-5">{{ stock_data.dayHigh }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-6">
+                        <div
+                            class="p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100 transition-all hover-border-primary text-center">
+                            <small class="text-secondary d-block mb-1 fw-medium" style="font-size: 0.75rem;">DAY
+                                LOW</small>
+                            <span class="fw-bold text-white fs-5">{{ stock_data.dayLow }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-6">
+                        <div
+                            class="p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100 transition-all hover-border-primary text-center">
+                            <small class="text-secondary d-block mb-1 fw-medium"
+                                style="font-size: 0.75rem;">VOLUME</small>
+                            <span class="fw-bold text-primary fs-5">{{ stock_data.volume }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-6">
+                        <div
+                            class="p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100 transition-all hover-border-primary text-center">
+                            <small class="text-secondary d-block mb-1 fw-medium"
+                                style="font-size: 0.75rem;">OPEN</small>
+                            <span class="fw-bold text-white fs-5">{{ stock_data.open }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="glass-panel flex-grow-1 d-flex flex-column justify-content-center align-items-center animate-in delay-4">
+                <h4 class="fw-bold text-white mb-4 w-100">Allocation</h4>
+                <div style="height: 220px; width: 100%; position: relative;">
+                    <canvas id="sipChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const currencySymbol = '{{ stock_data.currency_symbol }}';
+</script>
+{% if chart_data %}
+<script>
+    const ctx = document.getElementById('stockChart').getContext('2d');
+
+    // Create modern glowing gradient
+    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(0, 240, 255, 0.5)');
+    gradient.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.dates | safe }},
+        datasets: [{
+            label: 'Price',
+            data: {{ chart_data.prices | safe }},
+        borderColor: '#00F0FF',
+        backgroundColor: gradient,
+        borderWidth: 3,
+        pointBackgroundColor: '#0f172a',
+        pointBorderColor: '#00F0FF',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#fff',
+        pointRadius: 0,
+        fill: true,
+        tension: 0.4
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                titleColor: '#94a3b8',
+                bodyColor: '#fff',
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderWidth: 1,
+                padding: 12,
+                displayColors: false,
+                callbacks: {
+                    label: function (context) {
+                        return currencySymbol + ' ' + context.parsed.y.toLocaleString();
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                ticks: { color: '#64748b', font: { family: 'Inter', size: 11 }, maxTicksLimit: 8 }
+            },
+            y: {
+                grid: { color: 'rgba(255,255,255,0.05)', borderDash: [5, 5] },
+                ticks: { color: '#64748b', font: { family: 'Inter', size: 11 }, callback: function (val) { return currencySymbol + '' + val; } }
+            }
+        },
+        interaction: { intersect: false, mode: 'index' },
+    }
+    });
+</script>
+{% endif %}
+
+<script>
+    // Elements
+    const amountSlider = document.getElementById('sip_amount');
+    const yearsSlider = document.getElementById('sip_years');
+    const rateSlider = document.getElementById('sip_rate');
+    const dispAmt = document.getElementById('disp_amt');
+    const dispYear = document.getElementById('disp_year');
+    const dispRate = document.getElementById('disp_rate');
+    const resInvested = document.getElementById('res_invested');
+    const resProfit = document.getElementById('res_profit');
+    const resTotal = document.getElementById('res_total');
+
+    // Init Pie Chart
+    const ctxSip = document.getElementById('sipChart').getContext('2d');
+    let sipChart = new Chart(ctxSip, {
+        type: 'doughnut',
+        data: {
+            labels: ['Invested', 'Returns'],
+            datasets: [{
+                data: [50, 50],
+                backgroundColor: ['rgba(255, 255, 255, 0.1)', '#10b981'],
+                borderColor: ['rgba(255, 255, 255, 0.05)', '#10b981'],
+                borderWidth: 2,
+                hoverOffset: 4,
+                cutout: '75%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8', usePointStyle: true, padding: 20, font: { family: 'Inter' } } },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    callbacks: { label: function (c) { return ' ' + currencySymbol + ' ' + c.raw.toLocaleString(); } }
+                }
+            }
+        }
+    });
+
+    function formatMoney(num) {
+        if (num >= 10000000) return currencySymbol + " " + (num / 10000000).toFixed(2) + " Cr";
+        if (num >= 100000) return currencySymbol + " " + (num / 100000).toFixed(2) + " L";
+        return currencySymbol + " " + num.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+
+    function calculateSIP() {
+        let P = parseFloat(amountSlider.value);
+        let n = parseFloat(yearsSlider.value) * 12;
+        let r = parseFloat(rateSlider.value) / 12 / 100;
+        let fv = P * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+        let invested = P * n;
+        let profit = fv - invested;
+
+        // Update Text
+        dispAmt.innerText = currencySymbol + " " + P.toLocaleString();
+        dispYear.innerText = yearsSlider.value + " Years";
+        dispRate.innerText = rateSlider.value + " %";
+        resInvested.innerText = formatMoney(invested);
+        resProfit.innerText = formatMoney(profit);
+        resTotal.innerText = formatMoney(fv);
+
+        // Update Chart
+        sipChart.data.datasets[0].data = [Math.round(invested), Math.round(profit)];
+        sipChart.update();
+    }
+
+    amountSlider.addEventListener('input', calculateSIP);
+    yearsSlider.addEventListener('input', calculateSIP);
+    rateSlider.addEventListener('input', calculateSIP);
+
+    calculateSIP(); // Run once on load
+</script>
+{% endblock %}

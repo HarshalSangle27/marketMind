@@ -1,0 +1,11 @@
+flask
+flask-sqlalchemy
+flask-login
+flask-migrate
+yfinance
+pandas
+scikit-learn
+vaderSentiment
+apscheduler
+python-dotenv
+email-validator

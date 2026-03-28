@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block body_class %}body-strategies{% endblock %}
+{% block content %}
+<div class="container py-4 animate-in delay-1">
+    
+    <!-- Header -->
+    <div class="glass-panel mb-4 p-4 border-0 position-relative overflow-hidden" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);">
+        <div class="position-absolute top-0 start-50 translate-middle w-100 h-100" style="background: radial-gradient(circle, rgba(var(--bs-info-rgb), 0.15) 0%, transparent 70%); pointer-events: none;"></div>
+        
+        <div class="d-flex align-items-center mb-2 position-relative z-1">
+            <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex justify-content-center align-items-center me-3 border border-info border-opacity-25" style="width: 48px; height: 48px; border-width: 2px !important;">
+                <i class="bi bi-diagram-3 fs-4"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold text-white mb-0">Trading Strategies</h2>
+                <p class="text-secondary mb-0">Optimal ways to utilize MarketMind predictive AI models</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 border-start border-4 border-success border-opacity-75">
+                <i class="bi bi-shield-check text-success fs-2 mb-3 d-block"></i>
+                <h4 class="fw-bold text-white mb-3">Model Confirmation Strategy</h4>
+                <p class="text-secondary mb-4" style="line-height: 1.6;">
+                    The safest methodology. Wait for the Linear Regression trend to align perfectly with the News Sentiment score before taking action. 
+                </p>
+                <ul class="list-unstyled text-secondary mb-0">
+                    <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i><strong>If Trend is UP & Sentiment > 60:</strong> Consider long positions.</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i><strong>If Trend is DOWN & Sentiment < 40:</strong> Consider exiting positions.</li>
+                    <li><i class="bi bi-check2 text-primary me-2"></i><strong>If signals conflict:</strong> Hold cash. Market is unpredictable.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 border-start border-4 border-warning border-opacity-75">
+                <i class="bi bi-lightning-charge text-warning fs-2 mb-3 d-block"></i>
+                <h4 class="fw-bold text-white mb-3">Breakout Anticipation</h4>
+                <p class="text-secondary mb-4" style="line-height: 1.6;">
+                    Utilize the discrepancy between the <span class="text-white">Expected Open</span> and <span class="text-white">Expected Close</span> prices shown on the prediction dashboard.
+                </p>
+                <ul class="list-unstyled text-secondary mb-0">
+                    <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i><strong>Wide Margin:</strong> High volatility expected. Suitable for intraday.</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i><strong>Narrow Margin:</strong> Low volatility. Suitable for position building.</li>
+                    <li><i class="bi bi-check2 text-primary me-2"></i>Verify margins against the historical 10-day average.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 border-start border-4 border-info border-opacity-75">
+                <i class="bi bi-bar-chart-line text-info fs-2 mb-3 d-block"></i>
+                <h4 class="fw-bold text-white mb-3">Mean Reversion Strategy</h4>
+                <p class="text-secondary mb-4" style="line-height: 1.6;">
+                    Use the AI Trend Line on the dashboard to spot overextensions where the actual price deviates significantly from the statistical prediction.
+                </p>
+                <ul class="list-unstyled text-secondary mb-0">
+                    <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i><strong>Price far above Trend:</strong> Strong probability of a short-term pullback (reversion).</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i><strong>Price far below Trend:</strong> Strong probability of a short-term rebound.</li>
+                    <li><i class="bi bi-check2 text-primary me-2"></i>Best used in sideway or oscillating markets.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 border-start border-4 border-danger border-opacity-75">
+                <i class="bi bi-newspaper text-danger fs-2 mb-3 d-block"></i>
+                <h4 class="fw-bold text-white mb-3">News Impact Trading</h4>
+                <p class="text-secondary mb-4" style="line-height: 1.6;">
+                    Leverage the dynamic "Top Highlights & News" feed on the home page combined with the stock-specific sentiment analysis.
+                </p>
+                <ul class="list-unstyled text-secondary mb-0">
+                    <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i><strong>Macro vs Micro:</strong> Check if a stock's negative sentiment is due to its own news or broader market conditions.</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i><strong>Contrarian Play:</strong> Buy fundamentally strong stocks that have temporary negative sentiment (Score < 30) due to broader market panic.</li>
+                    <li><i class="bi bi-check2 text-primary me-2"></i>Monitor the NIFTY 50 dynamic news for macro shifts.</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

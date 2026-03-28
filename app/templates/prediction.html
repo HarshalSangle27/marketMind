@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block body_class %}body-home{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-in delay-1">
+    
+    <div class="glass-panel text-center mb-5 border-0 position-relative overflow-hidden" style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);">
+        <div class="position-absolute top-0 start-50 translate-middle w-100 h-100" style="background: radial-gradient(circle, rgba(var(--bs-{{ data.verdict_color }}-rgb), 0.15) 0%, transparent 70%); pointer-events: none;"></div>
+        
+        <div class="mb-3 position-relative z-1">
+            <img src="{{ data.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ data.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 shadow-lg border border-secondary border-opacity-25" style="width: 64px; height: 64px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
+        </div>
+        <p class="text-secondary mb-2 position-relative z-1 text-uppercase fw-semibold tracking-wide" style="letter-spacing: 2px;">AI Final Verdict &middot; {{ data.symbol }} ({{ current_period }})</p>
+        <h1 class="display-1 fw-bold text-{{ data.verdict_color }} mb-3 position-relative z-1" style="text-shadow: 0 0 40px rgba(var(--bs-{{ data.verdict_color }}-rgb), 0.4);">{{ data.verdict }}</h1>
+        <p class="lead position-relative z-1">
+            Predicted to <span class="fw-bold text-{{ data.trend_color }} px-2 py-1 rounded bg-{{ data.trend_color }} bg-opacity-10 border border-{{ data.trend_color }} border-opacity-25">{{ data.trend }}</span> 
+            to <span class="text-white fw-bold fs-3 mx-1">{{ data.predicted_price }}</span> 
+            by tomorrow.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-panel h-100 animate-in delay-2 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <h4 class="fw-bold text-white m-0 d-flex align-items-center"><i class="bi bi-graph-up-arrow text-primary me-3 fs-3"></i>AI Prediction Model</h4>
+                    <div class="btn-group bg-dark bg-opacity-50 p-1 rounded-3 border border-secondary border-opacity-25" role="group">
+                        <a href="{{ url_for('stocks.predict', ticker=data.symbol, period='1mo') }}" class="btn btn-sm btn-outline-secondary border-0 {{ 'active text-white bg-primary bg-opacity-25' if current_period == '1mo' }}">1M</a>
+                        <a href="{{ url_for('stocks.predict', ticker=data.symbol, period='3mo') }}" class="btn btn-sm btn-outline-secondary border-0 {{ 'active text-white bg-primary bg-opacity-25' if current_period == '3mo' }}">3M</a>
+                        <a href="{{ url_for('stocks.predict', ticker=data.symbol, period='6mo') }}" class="btn btn-sm btn-outline-secondary border-0 {{ 'active text-white bg-primary bg-opacity-25' if current_period == '6mo' }}">6M</a>
+                    </div>
+                </div>
+
+                <div class="flex-grow-1" style="min-height: 450px; width: 100%; position: relative;">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+                
+                <div class="mt-4 text-center p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-10 mx-auto w-100" style="max-width: 80%;">
+                    <small class="text-secondary d-flex justify-content-center align-items-center gap-4 flex-wrap">
+                        <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background: #00F0FF; box-shadow: 0 0 10px #00F0FF;"></span> Actual Price History</span>
+                        <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background: #fbbf24; box-shadow: 0 0 10px #fbbf24;"></span> AI Trend Line</span>
+                    </small>
+                </div>
+
+                <div class="row g-3 mt-4">
+                    <div class="col-sm-6 col-12">
+                        <div class="p-4 rounded-4 text-center h-100 transition-all hover-scale" style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05);">
+                            <small class="text-secondary d-block text-uppercase tracking-wide mb-2">Expected Open</small>
+                            <h3 class="text-white fw-bold m-0 text-shadow-sm">{{ data.currency_symbol }} {{ data.predicted_open }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-12">
+                        <div class="p-4 rounded-4 text-center h-100 transition-all hover-scale" style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05);">
+                            <small class="text-secondary d-block text-uppercase tracking-wide mb-2">Expected Close</small>
+                            <h3 class="text-{{ data.trend_color }} fw-bold m-0 text-shadow-sm">{{ data.currency_symbol }} {{ data.predicted_price }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 d-flex flex-column gap-4">
+            <div class="glass-panel text-center animate-in delay-3 position-relative overflow-hidden">
+                <div class="position-absolute top-0 start-50 translate-middle w-100 h-100" style="background: radial-gradient(circle, rgba({{ '16, 185, 129' if data.sentiment_score > 55 else '239, 68, 68' if data.sentiment_score < 45 else '245, 158, 11' }}, 0.1) 0%, transparent 60%); pointer-events: none;"></div>
+                
+                <h5 class="fw-bold text-white mb-2 position-relative z-1 d-flex align-items-center justify-content-center"><i class="bi bi-robot me-2 text-gradient fs-4"></i>News Sentiment</h5>
+                <div class="display-2 fw-bold my-4 text-{{ 'success' if data.sentiment_score > 55 else 'danger' if data.sentiment_score < 45 else 'warning' }} position-relative z-1" style="text-shadow: 0 0 30px currentcolor;">
+                    {{ data.sentiment_score }}<span class="fs-4 text-secondary opacity-50">/100</span>
+                </div>
+                <div class="w-100 bg-dark rounded-pill h-2 mb-3 overflow-hidden border border-secondary border-opacity-25 position-relative z-1" style="height: 8px;">
+                    <div class="h-100 bg-{{ 'success' if data.sentiment_score > 55 else 'danger' if data.sentiment_score < 45 else 'warning' }}" style="width: {{ data.sentiment_score }}%; box-shadow: 0 0 10px currentcolor;"></div>
+                </div>
+                <p class="text-secondary small position-relative z-1 m-0">Analyzed from latest global financial news</p>
+            </div>
+
+            <div class="glass-panel animate-in delay-4 flex-grow-1 d-flex flex-column">
+                <h6 class="text-white mb-4 fw-bold d-flex align-items-center"><i class="bi bi-newspaper me-2 text-primary"></i>AI Tagged News</h6>
+                <div class="overflow-auto flex-grow-1 pe-2" style="max-height: 250px;">
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-3">
+                        {% for news in data.news %}
+                        <li class="p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-10 transition-all hover-border-primary">
+                            <a href="{{ news.link }}" target="_blank" class="text-decoration-none text-white small d-block mb-2 text-truncate-2 hover-text-primary fw-medium" style="line-height: 1.4;">{{ news.title }}</a>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-{{ 'success' if news.tag.startswith('Positive') else 'danger' if news.tag.startswith('Negative') else 'secondary' }} bg-opacity-10 text-{{ 'success' if news.tag.startswith('Positive') else 'danger' if news.tag.startswith('Negative') else 'light' }} border border-{{ 'success' if news.tag.startswith('Positive') else 'danger' if news.tag.startswith('Negative') else 'secondary' }} border-opacity-25 rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                                    <i class="bi {{ 'bi-emoji-smile' if news.tag.startswith('Positive') else 'bi-emoji-frown' if news.tag.startswith('Negative') else 'bi-dash' }} me-1"></i>{{ news.tag }}
+                                </span>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="glass-panel text-center animate-in delay-5 p-4 border-0" style="background: rgba(15, 23, 42, 0.8);">
+                {% if is_subscribed %}
+                    <div class="mb-3">
+                        <div class="d-inline-flex justify-content-center align-items-center rounded-circle bg-success bg-opacity-10 border border-success border-opacity-25 mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-check-lg text-success fs-1"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold text-white mb-1">Subscribed Active</h5>
+                    <p class="text-secondary small mb-0">Receiving daily AI reports for {{ data.symbol }}</p>
+                {% else %}
+                    <form method="POST" action="{{ url_for('stocks.predict', ticker=data.symbol, period=current_period) }}">
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fs-6 fw-bold d-flex align-items-center justify-content-center shadow-lg"><i class="bi bi-bell-fill me-2 fs-5"></i> Enable Daily Alerts</button>
+                    </form>
+                    <small class="text-secondary d-block mt-3 opacity-75">Get AI predictions delivered to your inbox</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const ctx = document.getElementById('predictionChart').getContext('2d');
+    
+    // Gradient for actual prices
+    let gradientActual = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientActual.addColorStop(0, 'rgba(0, 240, 255, 0.3)'); 
+    gradientActual.addColorStop(1, 'rgba(0, 240, 255, 0.0)'); 
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ data.dates | safe }},
+            datasets: [
+                {
+                    label: 'Actual Price', 
+                    data: {{ data.actual_prices | safe }},
+                    borderColor: '#00F0FF', 
+                    backgroundColor: gradientActual,
+                    borderWidth: 3, 
+                    pointRadius: 0, 
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#0f172a',
+                    pointBorderColor: '#00F0FF',
+                    pointBorderWidth: 2,
+                    tension: 0.4, 
+                    fill: true
+                },
+                {
+                    label: 'AI Trend Line', 
+                    data: {{ data.trend_prices | safe }},
+                    borderColor: '#fbbf24', 
+                    borderWidth: 3, 
+                    borderDash: [8, 6],
+                    pointRadius: 0, 
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#0f172a',
+                    pointBorderColor: '#fbbf24',
+                    pointBorderWidth: 2,
+                    tension: 0.4, 
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true, 
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: { 
+                legend: { display: false }, 
+                tooltip: { 
+                    mode: 'index', 
+                    intersect: false,
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#94a3b8',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': {{ data.currency_symbol }} ' + context.parsed.y.toLocaleString(undefined, {maximumFractionDigits: 2});
+                        }
+                    }
+                } 
+            },
+            scales: { 
+                x: { 
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { family: 'Inter', size: 11 }, maxTicksLimit: 10 } 
+                }, 
+                y: { 
+                    grid: { color: 'rgba(255,255,255,0.05)', borderDash: [5, 5] }, 
+                    ticks: { color: '#64748b', font: { family: 'Inter', size: 11 }, callback: function(val) { return '{{ data.currency_symbol }}' + val; } } 
+                } 
+            }
+        }
+    });
+</script>
+{% endblock %}
