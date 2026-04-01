@@ -38,10 +38,16 @@ def signup():
         password = request.form.get('password')
         
         # Check if email already exists
-        user = User.query.filter_by(email=email).first()
-        if user:
+        user_by_email = User.query.filter_by(email=email).first()
+        if user_by_email:
             flash('Email already exists. Please log in.', 'warning')
             return redirect(url_for('auth.login'))
+            
+        # Check if username already exists
+        user_by_username = User.query.filter_by(username=username).first()
+        if user_by_username:
+            flash('Username already taken. Please choose another one.', 'warning')
+            return redirect(url_for('auth.signup'))
         
         # Create new user
         new_user = User(
