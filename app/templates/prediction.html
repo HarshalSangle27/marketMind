@@ -28,6 +28,7 @@
                         <a href="{{ url_for('stocks.predict', ticker=data.symbol, period='1mo') }}" class="btn btn-sm btn-outline-secondary border-0 {{ 'active text-white bg-primary bg-opacity-25' if current_period == '1mo' }}">1M</a>
                         <a href="{{ url_for('stocks.predict', ticker=data.symbol, period='3mo') }}" class="btn btn-sm btn-outline-secondary border-0 {{ 'active text-white bg-primary bg-opacity-25' if current_period == '3mo' }}">3M</a>
                         <a href="{{ url_for('stocks.predict', ticker=data.symbol, period='6mo') }}" class="btn btn-sm btn-outline-secondary border-0 {{ 'active text-white bg-primary bg-opacity-25' if current_period == '6mo' }}">6M</a>
+                        <a href="{{ url_for('stocks.predict', ticker=data.symbol, period='1y') }}" class="btn btn-sm btn-outline-secondary border-0 {{ 'active text-white bg-primary bg-opacity-25' if current_period == '1y' }}">1Y</a>
                     </div>
                 </div>
 

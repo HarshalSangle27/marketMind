@@ -38,7 +38,7 @@
                     <p class="text-secondary mb-3">Current Global Sentiment Score: <span id="sentimentScore" class="text-white fw-bold">0/100</span></p>
 
                     <div class="mt-4 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); max-width: 600px; text-align: left;">
-                        <h6 class="text-white fw-bold"><i class="bi bi-info-circle text-primary me-2"></i>What does "Bullish" mean here?</h6>
+                        <h6 class="text-white fw-bold"><i class="bi bi-info-circle text-primary me-2"></i>What does it mean here?</h6>
                         <p class="text-secondary small mb-0 lh-base">
                             The Market Sentiment Graph visualizes the overall mood of financial news outlets evaluated by MarketMind's natural language processing engine using VADER analysis. 
                             <br><br>
@@ -53,47 +53,21 @@
             <div class="glass-panel h-100 p-4 d-flex flex-column">
                 <h5 class="fw-bold text-white mb-4">Top Influencing Factors</h5>
                 <div class="d-flex flex-column gap-3 flex-grow-1">
-                    
-                    <div class="p-3 bg-dark bg-opacity-50 border border-success border-opacity-25 rounded-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-white fw-medium">Federal Reserve Policy</span>
-                            <i class="bi bi-arrow-up text-success"></i>
+                    {% if data.top_factors %}
+                        {% for factor in data.top_factors %}
+                        <div class="p-3 bg-dark bg-opacity-50 border border-{{ factor.color }} border-opacity-25 rounded-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-white fw-medium text-truncate me-2" style="max-width: 85%;">{{ factor.source }}</span>
+                                <i class="bi bi-arrow-{{ factor.direction }} text-{{ factor.color }}"></i>
+                            </div>
+                            <small class="text-secondary d-block lh-sm" title="{{ factor.title }}">{{ factor.title }}</small>
                         </div>
-                        <small class="text-secondary d-block">Interest rates held steady, boosting equity markets.</small>
-                    </div>
-
-                    <div class="p-3 bg-dark bg-opacity-50 border border-success border-opacity-25 rounded-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-white fw-medium">Tech Earnings</span>
-                            <i class="bi bi-arrow-up text-success"></i>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 text-center">
+                            <small class="text-secondary d-block">No significant influencing factors found at this time.</small>
                         </div>
-                        <small class="text-secondary d-block">AI advancements led to higher than expected Q3 results.</small>
-                    </div>
-
-                    <div class="p-3 bg-dark bg-opacity-50 border border-danger border-opacity-25 rounded-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-white fw-medium">Geopolitical Tension</span>
-                            <i class="bi bi-arrow-down text-danger"></i>
-                        </div>
-                        <small class="text-secondary d-block">Regional conflicts causing minor supply chain concerns.</small>
-                    </div>
-
-                    <div class="p-3 bg-dark bg-opacity-50 border border-danger border-opacity-25 rounded-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-white fw-medium">Inflation Data</span>
-                            <i class="bi bi-arrow-down text-danger"></i>
-                        </div>
-                        <small class="text-secondary d-block">Core CPI slightly above expectations creates mild headwinds.</small>
-                    </div>
-
-                    <div class="p-3 bg-dark bg-opacity-50 border border-success border-opacity-25 rounded-3 mt-auto">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-white fw-medium">Corporate Buybacks</span>
-                            <i class="bi bi-arrow-up text-success"></i>
-                        </div>
-                        <small class="text-secondary d-block">Record level share repurchases providing market support.</small>
-                    </div>
-
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -109,16 +83,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const scoreElement = document.getElementById("sentimentScore");
     const labelElement = document.getElementById("sentimentLabel");
     
-    // Dynamically calculate sentiment score based on Top Influencing Factors
-    const positiveFactors = document.querySelectorAll('.bi-arrow-up.text-success').length;
-    const negativeFactors = document.querySelectorAll('.bi-arrow-down.text-danger').length;
-    const totalFactors = positiveFactors + negativeFactors;
-    
-    // Calculate ratio percentage (e.g. 3 positive out of 5 = 60)
-    let targetScore = 50; // default neutral
-    if (totalFactors > 0) {
-        targetScore = Math.round((positiveFactors / totalFactors) * 100);
-    }
+    // Calculate ratio percentage from backend
+    let targetScore = {{ data.overall_score }};
     
     // Calculate angle (-90 to +90)
     const targetDegree = (targetScore / 100) * 180 - 90;

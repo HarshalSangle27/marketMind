@@ -31,96 +31,32 @@
                     </tr>
                 </thead>
                 <tbody class="border-top-0">
-                    <tr class="transition-all hover-bg-light">
-                        <td class="py-3 px-4 border-secondary border-opacity-10">
-                            <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name={{ 'Parag Parikh Flexi Cap Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
-                                <div>
-                                    <span class="d-block fw-bold text-white mb-0">Parag Parikh Flexi Cap Fund</span>
-                                    <small class="text-secondary">Equity</small>
+                    {% if mf_picks %}
+                        {% for fund in mf_picks %}
+                        <tr class="transition-all hover-bg-light">
+                            <td class="py-3 px-4 border-secondary border-opacity-10">
+                                <div class="d-flex align-items-center">
+                                    <img src="https://ui-avatars.com/api/?name={{ fund.name | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
+                                    <div>
+                                        <span class="d-block fw-bold text-white mb-0">{{ fund.name }}</span>
+                                        <small class="text-secondary">Mutual Fund</small>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Flexi Cap</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-warning fw-medium">Moderate</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10">High</td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+18.5%</td>
-                    </tr>
-                    <tr class="transition-all hover-bg-light">
-                        <td class="py-3 px-4 border-secondary border-opacity-10">
-                            <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name={{ 'Quant Small Cap Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
-                                <div>
-                                    <span class="d-block fw-bold text-white mb-0">Quant Small Cap Fund</span>
-                                    <small class="text-secondary">Equity</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Small Cap</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-danger fw-medium">High</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10">Medium</td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+24.2%</td>
-                    </tr>
-                    <tr class="transition-all hover-bg-light">
-                        <td class="py-3 px-4 border-secondary border-opacity-10">
-                            <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name={{ 'ICICI Pru Nifty 50 Index Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
-                                <div>
-                                    <span class="d-block fw-bold text-white mb-0">ICICI Pru Nifty 50 Index Fund</span>
-                                    <small class="text-secondary">Index</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Large Cap</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-success fw-medium">Low</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10">Very High</td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+14.1%</td>
-                    </tr>
-                    <tr class="transition-all hover-bg-light">
-                        <td class="py-3 px-4 border-secondary border-opacity-10">
-                            <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name={{ 'Nippon India Small Cap Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
-                                <div>
-                                    <span class="d-block fw-bold text-white mb-0">Nippon India Small Cap Fund</span>
-                                    <small class="text-secondary">Equity</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Small Cap</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-danger fw-medium">High</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10">Medium</td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+27.4%</td>
-                    </tr>
-                    <tr class="transition-all hover-bg-light">
-                        <td class="py-3 px-4 border-secondary border-opacity-10">
-                            <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name={{ 'SBI Contra Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
-                                <div>
-                                    <span class="d-block fw-bold text-white mb-0">SBI Contra Fund</span>
-                                    <small class="text-secondary">Equity</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Contra</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-warning fw-medium">Moderate</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10">High</td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+21.0%</td>
-                    </tr>
-                    <tr class="transition-all hover-bg-light">
-                        <td class="py-3 px-4 border-secondary border-opacity-10">
-                            <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name={{ 'HDFC Mid-Cap Opportunities Fund' | urlencode }}&length=1&background=random&color=fff&bold=true" class="rounded-3 me-3 border border-secondary border-opacity-25" style="width: 40px; height: 40px; object-fit: cover;" alt="Logo">
-                                <div>
-                                    <span class="d-block fw-bold text-white mb-0">HDFC Mid-Cap Opportunities Fund</span>
-                                    <small class="text-secondary">Equity</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">Mid Cap</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-warning fw-medium">Moderate</span></td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10">High</td>
-                        <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold text-success">+19.5%</td>
-                    </tr>
+                            </td>
+                            <td class="py-3 px-4 border-secondary border-opacity-10"><span class="badge bg-dark border border-secondary border-opacity-25 rounded-pill px-2 py-1">{{ fund.category }}</span></td>
+                            <td class="py-3 px-4 border-secondary border-opacity-10"><span class="text-{{ fund.risk_color }} fw-medium">{{ fund.risk }}</span></td>
+                            <td class="py-3 px-4 border-secondary border-opacity-10">{{ fund.conviction }}</td>
+                            <td class="py-3 px-4 border-secondary border-opacity-10 text-end fw-bold {{ 'text-success' if fund.cagr > 0 else 'text-danger' }}">{% if fund.cagr > 0 %}+{% endif %}{{ fund.cagr }}%</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="py-5 text-center text-secondary">
+                                <i class="bi bi-arrow-repeat ms-2 fs-4 mb-2"></i>
+                                <span class="d-block mt-2">Connecting to live market data... Please refresh in a moment.</span>
+                            </td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>

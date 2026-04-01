@@ -227,3 +227,161 @@ def get_market_news(limit=3):
     except Exception as e:
         print(f"Error fetching market news: {e}")
         return []
+
+def analyze_global_sentiment():
+    """
+    Fetches news from major global indices and commodities to calculate an overall
+    macro-economic sentiment score. Extracts the top 5 strongest polarizing headlines
+    as influencing factors.
+    """
+    try:
+        analyzer = SentimentIntensityAnalyzer()
+        
+        # Major indices and indicators to represent "Global Market"
+        # S&P 500, Nasdaq, NIFTY 50, Gold, Bitcoin
+        symbols = ['^GSPC', '^IXIC', '^NSEI', 'GC=F', 'BTC-USD']
+        
+        all_news = []
+        
+        for sym in symbols:
+            try:
+                ticker = yf.Ticker(sym)
+                news = ticker.news
+                if news:
+                    all_news.extend(news[:5]) # Get top 5 from each to have a mix
+            except Exception as e:
+                print(f"Failed to fetch news for {sym}: {e}")
+                
+        if not all_news:
+            return None
+            
+        processed_factors = []
+        positive_count = 0
+        negative_count = 0
+        
+        # Keep track of unique titles
+        seen_titles = set()
+        
+        for item in all_news:
+            content = item.get('content', item)
+            # Some responses use just 'title' directly
+            if not isinstance(content, dict):
+                content = item
+                
+            title = content.get('title', '')
+            
+            if not title or title in seen_titles:
+                continue
+            seen_titles.add(title)
+            
+            # Source/Publisher
+            publisher = content.get('provider', {}).get('displayName', 'Market News')
+            if not isinstance(publisher, str): publisher = 'Market News'
+            
+            # Analysis
+            score = analyzer.polarity_scores(title)['compound']
+            
+            # Categorize
+            if score >= 0.05:
+                direction = "up"
+                tag_color = "success"
+                positive_count += 1
+            elif score <= -0.05:
+                direction = "down"
+                tag_color = "danger"
+                negative_count += 1
+            else:
+                continue # Skip neutral for factors
+                
+            processed_factors.append({
+                'title': title,
+                'source': publisher,
+                'direction': direction,
+                'color': tag_color,
+                'abs_score': abs(score) # For sorting later
+            })
+            
+        total_eval = positive_count + negative_count
+        
+        if total_eval == 0:
+            target_score = 50
+        else:
+            target_score = int((positive_count / total_eval) * 100)
+            
+        # Sort factors by strongest absolute sentiment to find the "Top Influencing Factors"
+        processed_factors.sort(key=lambda x: x['abs_score'], reverse=True)
+        top_factors = processed_factors[:5]
+        
+        return {
+            'overall_score': target_score,
+            'top_factors': top_factors,
+            'positive_count': positive_count,
+            'negative_count': negative_count
+        }
+
+    except Exception as e:
+        print(f"Error in global sentiment analysis: {e}")
+        return None
+
+def analyze_mutual_fund(ticker):
+    """
+    Analyzes a mutual fund using yfinance history.
+    Calculates 1-Year CAGR, Risk Level (via volatility), and AI Conviction (momentum).
+    """
+    try:
+        mf = yf.Ticker(ticker)
+        # Get 1 year of history
+        hist = mf.history(period="1y").dropna()
+        
+        if len(hist) < 50: # Need sufficient data
+            return None
+            
+        current_nav = hist['Close'].iloc[-1]
+        start_nav_1y = hist['Close'].iloc[0]
+        
+        # Calculate 1Y CAGR
+        cagr_1y = ((current_nav / start_nav_1y) - 1) * 100
+        
+        # Calculate Risk Level (Annualized Volatility of daily returns)
+        daily_returns = hist['Close'].pct_change().dropna()
+        # roughly 252 trading days in a year
+        annual_volatility = daily_returns.std() * np.sqrt(252) * 100 
+        
+        if annual_volatility < 12:
+            risk_level = "Low"
+            risk_color = "success"
+        elif annual_volatility < 20:
+            risk_level = "Moderate"
+            risk_color = "warning"
+        else:
+            risk_level = "High"
+            risk_color = "danger"
+            
+        # Calculate AI Conviction (1-month vs 6-month momentum)
+        try:
+            hist_6mo = mf.history(period="6mo").dropna()
+            hist_1mo = mf.history(period="1mo").dropna()
+            
+            ret_6mo = ((hist_6mo['Close'].iloc[-1] / hist_6mo['Close'].iloc[0]) - 1)
+            ret_1mo = ((hist_1mo['Close'].iloc[-1] / hist_1mo['Close'].iloc[0]) - 1)
+            
+            # Simple heuristic: strong short-term momentum relative to long-term
+            if ret_1mo > (ret_6mo / 6) * 1.5:
+                conviction = "Very High"
+            elif ret_1mo > (ret_6mo / 6) * 1.0:
+                conviction = "High"
+            else:
+                conviction = "Medium"
+        except:
+            conviction = "High" # Fallback
+            
+        return {
+            'cagr': round(cagr_1y, 2),
+            'risk': risk_level,
+            'risk_color': risk_color,
+            'conviction': conviction
+        }
+            
+    except Exception as e:
+        print(f"Error analyzing mutual fund {ticker}: {e}")
+        return None

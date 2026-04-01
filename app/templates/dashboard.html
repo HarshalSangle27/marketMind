@@ -43,12 +43,14 @@
                             class="bi bi-activity text-gradient me-3 fs-4"></i>Price History</h5>
                     <div class="btn-group bg-dark bg-opacity-50 p-1 rounded-3 border border-secondary border-opacity-25"
                         role="group">
-                        <a href="{{ url_for('stocks.dashboard', ticker=stock_data.symbol, period='2wk') }}"
-                            class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '2wk' %}active text-white bg-primary bg-opacity-25{% endif %}">2W</a>
                         <a href="{{ url_for('stocks.dashboard', ticker=stock_data.symbol, period='1mo') }}"
                             class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '1mo' %}active text-white bg-primary bg-opacity-25{% endif %}">1M</a>
+                        <a href="{{ url_for('stocks.dashboard', ticker=stock_data.symbol, period='3mo') }}"
+                            class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '3mo' %}active text-white bg-primary bg-opacity-25{% endif %}">3M</a>
                         <a href="{{ url_for('stocks.dashboard', ticker=stock_data.symbol, period='6mo') }}"
                             class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '6mo' %}active text-white bg-primary bg-opacity-25{% endif %}">6M</a>
+                        <a href="{{ url_for('stocks.dashboard', ticker=stock_data.symbol, period='1y') }}"
+                            class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '1y' %}active text-white bg-primary bg-opacity-25{% endif %}">1Y</a>
                     </div>
                 </div>
                 <div style="height: 400px; width: 100%; position: relative;">

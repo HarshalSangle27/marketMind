@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app.utils.fetcher import get_stock_data, get_market_health
-from app.utils.ml_engine import analyze_stock, get_market_news
+from app.utils.ml_engine import analyze_stock, get_market_news, analyze_global_sentiment, analyze_mutual_fund
 from app.utils.email_service import send_alert_email
 from app.models import Watchlist, StockHistory
 from app import db
@@ -228,13 +228,75 @@ def ai_picks():
 
     return render_template('ai_picks.html', top_picks=ai_cache['picks'])
 
+# --- GLOBAL MUTUAL FUNDS CACHE ---
+mf_cache = {'picks': [], 'last_updated': 0}
+
 @stocks_bp.route('/mutual-funds-picks')
 def mutual_funds_picks():
-    return render_template('mutual_funds_picks.html')
+    current_time = time.time()
+    
+    # Cache for 12 hours (43200 seconds) since MFs update daily
+    if not mf_cache['picks'] or (current_time - mf_cache['last_updated'] > 43200):
+        print("⚡ Analyzing Mutual Funds data...")
+        
+        # Indian Mutual Fund Tickers on Yahoo Finance (Expanded to ensure robustness)
+        target_funds = [
+            {'ticker': '0P0000YWL1.BO', 'name': 'Parag Parikh Flexi Cap Fund', 'category': 'Flexi Cap'},
+            {'ticker': '0P0000XV99.BO', 'name': 'ICICI Pru Nifty 50 Index Fund', 'category': 'Index'},
+            {'ticker': '0P0000XVUA.BO', 'name': 'SBI Contra Fund', 'category': 'Contra'},
+            {'ticker': '0P0000XWAA.BO', 'name': 'SBI Small Cap Fund', 'category': 'Small Cap'},
+            {'ticker': '0P0000XVWT.BO', 'name': 'Axis Bluechip Fund', 'category': 'Large Cap'},
+            {'ticker': '0P0000XVKY.BO', 'name': 'Mirae Asset Large Cap Fund', 'category': 'Large Cap'},
+            {'ticker': '0P0000XW7U.BO', 'name': 'HDFC Small Cap Fund', 'category': 'Small Cap'},
+            {'ticker': '0P0000XVYZ.BO', 'name': 'Kotak Flexicap Fund', 'category': 'Flexi Cap'},
+            {'ticker': 'NIFTYBEES.NS', 'name': 'Nippon India Nifty 50 ETF', 'category': 'Index ETF'},
+            {'ticker': 'MON100.NS', 'name': 'Motilal Oswal Nasdaq 100 ETF', 'category': 'Intl ETF'}
+        ]
+        
+        results = []
+        for fund in target_funds:
+            try:
+                analysis = analyze_mutual_fund(fund['ticker'])
+                if analysis:
+                    fund.update(analysis) # Merge metrics into fund dict
+                    results.append(fund)
+            except Exception as e:
+                print(f"Error analyzing {fund['name']}: {e}")
+                
+        # Sort by highest CAGR
+        results.sort(key=lambda x: x.get('cagr', 0), reverse=True)
+        
+        if results:
+            mf_cache['picks'] = results
+            mf_cache['last_updated'] = current_time
+
+    return render_template('mutual_funds_picks.html', mf_picks=mf_cache['picks'])
+
+# --- GLOBAL SENTIMENT CACHE ---
+sentiment_cache = {'data': None, 'last_updated': 0}
 
 @stocks_bp.route('/sentiment')
 def sentiment():
-    return render_template('sentiment.html')
+    current_time = time.time()
+    
+    if not sentiment_cache['data'] or (current_time - sentiment_cache['last_updated'] > 3600):
+        print("⚡ Generating Global Sentiment Data...")
+        sentiment_data = analyze_global_sentiment()
+        
+        # If fetch fails, keep old data if it exists, otherwise provide a neutral fallback
+        if sentiment_data:
+            sentiment_cache['data'] = sentiment_data
+            sentiment_cache['last_updated'] = current_time
+        elif not sentiment_cache['data']:
+            # Fallback
+            sentiment_cache['data'] = {
+                'overall_score': 50,
+                'top_factors': [],
+                'positive_count': 0,
+                'negative_count': 0
+            }
+            
+    return render_template('sentiment.html', data=sentiment_cache['data'])
 
 @stocks_bp.route('/strategies')
 def strategies():
