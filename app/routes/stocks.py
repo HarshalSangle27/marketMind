@@ -25,7 +25,7 @@ def home():
     
     # Refresh if cache is empty OR older than 5 minutes
     if not cache['data'] or (current_time - cache['last_updated'] > 60):
-        print("⚡ Downloading Fresh Trending Data...")
+        print("[INFO] Downloading Fresh Trending Data...")
         
         # LIST OF 10 STOCKS (We only use the first 8 that work)
         # This ensures that if one fails (like Zomato), we have backups.
@@ -50,7 +50,7 @@ def home():
                     if t == 'BTC-USD': full_data['info']['name'] = 'Bitcoin'
                     fresh_data.append(full_data['info'])
             except Exception as e:
-                print(f"⚠️ Failed to fetch {t}: {e}")
+                print(f"[WARNING] Failed to fetch {t}: {e}")
                 continue
         # Fetch Dynamic News
         cache['news'] = get_market_news(limit=3)
@@ -196,7 +196,7 @@ def ai_picks():
     current_time = time.time()
     
     if not ai_cache['picks'] or (current_time - ai_cache['last_updated'] > 3600):
-        print("⚡ Generating AI Top Picks...")
+        print("[INFO] Generating AI Top Picks...")
         tickers_to_analyze = ['TCS.NS', 'RELIANCE.NS', 'HDFCBANK.NS', 'LT.NS', 'ITC.NS', 'INFY.NS', 'TATAMOTORS.NS', 'SBIN.NS']
         results = []
         for ticker in tickers_to_analyze:
@@ -237,7 +237,7 @@ def mutual_funds_picks():
     
     # Cache for 12 hours (43200 seconds) since MFs update daily
     if not mf_cache['picks'] or (current_time - mf_cache['last_updated'] > 43200):
-        print("⚡ Analyzing Mutual Funds data...")
+        print("[INFO] Analyzing Mutual Funds data...")
         
         # Indian Mutual Fund Tickers on Yahoo Finance (Expanded to ensure robustness)
         target_funds = [
@@ -280,7 +280,7 @@ def sentiment():
     current_time = time.time()
     
     if not sentiment_cache['data'] or (current_time - sentiment_cache['last_updated'] > 3600):
-        print("⚡ Generating Global Sentiment Data...")
+        print("[INFO] Generating Global Sentiment Data...")
         sentiment_data = analyze_global_sentiment()
         
         # If fetch fails, keep old data if it exists, otherwise provide a neutral fallback
