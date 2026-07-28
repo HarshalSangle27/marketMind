@@ -8,11 +8,11 @@
         <div class="position-absolute top-0 start-50 translate-middle w-100 h-100" style="background: radial-gradient(circle, rgba(var(--bs-{{ data.verdict_color }}-rgb), 0.15) 0%, transparent 70%); pointer-events: none;"></div>
         
         <div class="mb-3 position-relative z-1">
-            <img src="{{ data.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ data.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 shadow-lg border border-secondary border-opacity-25" style="width: 64px; height: 64px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
+            <img src="{{ data.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ data.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 shadow-lg border border-secondary border-opacity-25" style="width: 56px; height: 56px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
         </div>
         <p class="text-secondary mb-2 position-relative z-1 text-uppercase fw-semibold tracking-wide" style="letter-spacing: 2px;">AI Final Verdict &middot; {{ data.symbol }} ({{ current_period }})</p>
-        <h1 class="display-1 fw-bold text-{{ data.verdict_color }} mb-3 position-relative z-1" style="text-shadow: 0 0 40px rgba(var(--bs-{{ data.verdict_color }}-rgb), 0.4);">{{ data.verdict }}</h1>
-        <p class="lead position-relative z-1">
+        <h1 class="display-3 display-md-1 fw-bold text-{{ data.verdict_color }} mb-3 position-relative z-1 text-break" style="text-shadow: 0 0 40px rgba(var(--bs-{{ data.verdict_color }}-rgb), 0.4);">{{ data.verdict }}</h1>
+        <p class="lead position-relative z-1 px-2">
             Predicted to <span class="fw-bold text-{{ data.trend_color }} px-2 py-1 rounded bg-{{ data.trend_color }} bg-opacity-10 border border-{{ data.trend_color }} border-opacity-25">{{ data.trend }}</span> 
             to <span class="text-white fw-bold fs-3 mx-1">{{ data.predicted_price }}</span> 
             by tomorrow.
@@ -20,7 +20,7 @@
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-8">
+        <div class="col-lg-8 col-12">
             <div class="glass-panel h-100 animate-in delay-2 d-flex flex-column">
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                     <h4 class="fw-bold text-white m-0 d-flex align-items-center"><i class="bi bi-graph-up-arrow text-primary me-3 fs-3"></i>AI Prediction Model</h4>
@@ -32,11 +32,11 @@
                     </div>
                 </div>
 
-                <div class="flex-grow-1" style="min-height: 450px; width: 100%; position: relative;">
+                <div class="flex-grow-1" style="min-height: clamp(280px, 45vh, 450px); width: 100%; position: relative;">
                     <canvas id="predictionChart"></canvas>
                 </div>
                 
-                <div class="mt-4 text-center p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-10 mx-auto w-100" style="max-width: 80%;">
+                <div class="mt-4 text-center p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-10 mx-auto w-100" style="max-width: 95%;">
                     <small class="text-secondary d-flex justify-content-center align-items-center gap-4 flex-wrap">
                         <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background: #00F0FF; box-shadow: 0 0 10px #00F0FF;"></span> Actual Price History</span>
                         <span class="d-flex align-items-center"><span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background: #fbbf24; box-shadow: 0 0 10px #fbbf24;"></span> AI Trend Line</span>
@@ -102,7 +102,7 @@
                     <h5 class="fw-bold text-white mb-1">Subscribed Active</h5>
                     <p class="text-secondary small mb-0">Receiving daily AI reports for {{ data.symbol }}</p>
                 {% else %}
-                    <form method="POST" action="{{ url_for('stocks.predict', ticker=data.symbol, period=current_period) }}">
+                    <form method="POST" action="{{ url_for('stocks.predict', ticker=data.symbol, period=current_period) }}" class="no-loader">
                         <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fs-6 fw-bold d-flex align-items-center justify-content-center shadow-lg"><i class="bi bi-bell-fill me-2 fs-5"></i> Enable Daily Alerts</button>
                     </form>
                     <small class="text-secondary d-block mt-3 opacity-75">Get AI predictions delivered to your inbox</small>

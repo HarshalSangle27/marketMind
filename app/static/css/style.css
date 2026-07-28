@@ -350,3 +350,75 @@ footer {
     background-attachment: fixed;
     background-blend-mode: overlay, normal, normal;
 }
+
+/* ==========================================================================
+   MOBILE & RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+}
+
+@media (max-width: 768px) {
+    .glass-panel {
+        padding: 18px;
+        border-radius: 16px;
+    }
+    
+    .display-1 {
+        font-size: calc(1.8rem + 2.5vw) !important;
+    }
+    
+    .display-3 {
+        font-size: calc(1.6rem + 1.8vw) !important;
+    }
+
+    .display-5 {
+        font-size: calc(1.3rem + 1.2vw) !important;
+    }
+
+    .search-wrapper {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .glass-panel {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    h1, .h1 { font-size: 1.65rem; }
+    h2, .h2 { font-size: 1.45rem; }
+    h3, .h3 { font-size: 1.25rem; }
+    
+    .btn-primary {
+        padding: 0.55rem 1.2rem;
+    }
+    
+    .input-group-text, .form-control {
+        font-size: 0.9rem !important;
+    }
+
+    /* Table adjustments */
+    .table-responsive {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .table th, .table td {
+        white-space: nowrap;
+    }
+
+    footer {
+        padding: 1.5rem 1rem;
+    }
+}

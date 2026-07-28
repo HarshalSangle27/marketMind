@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import concurrent.futures
+import time
 
 NIFTY_50_TICKERS = [
     'RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'ICICIBANK.NS', 'BHARTIARTL.NS', 'SBIN.NS', 'INFY.NS', 
@@ -20,7 +21,6 @@ def get_market_health():
     """
     try:
         # Fetch the last 2 days of closing prices for all NIFTY 50 stocks
-        # grouping by ticker to easily access each stock's data
         data = yf.download(NIFTY_50_TICKERS, period="2d", interval="1d", progress=False)['Close']
         
         advances = 0
@@ -28,7 +28,6 @@ def get_market_health():
         
         for ticker in NIFTY_50_TICKERS:
             try:
-                # Check if we have at least 2 days of data for this ticker
                 if ticker in data.columns and len(data[ticker].dropna()) >= 2:
                     prices = data[ticker].dropna()
                     prev_close = float(prices.iloc[-2])
@@ -52,7 +51,6 @@ def get_market_health():
                 
         total_tracked = advances + declines
         
-        # Calculate percentages for the progress bar
         if total_tracked > 0:
             adv_pct = round((advances / total_tracked) * 100)
             dec_pct = 100 - adv_pct
@@ -60,11 +58,9 @@ def get_market_health():
             adv_pct = 50
             dec_pct = 50
             
-        # Default fallback if API fails completely
         if total_tracked == 0:
             advances, declines, adv_pct, dec_pct = 34, 16, 68, 32
             
-        # Dynamic momentum text
         if adv_pct >= 65:
             momentum_text = "Overall momentum is strongly positive today."
         elif adv_pct >= 55:
@@ -86,7 +82,6 @@ def get_market_health():
         
     except Exception as e:
         print(f"Market Health Error: {e}")
-        # Return fallback values on error
         return {
             'advances': 34,
             'declines': 16,
@@ -95,11 +90,21 @@ def get_market_health():
             'text': "Overall momentum is strongly positive today."
         }
 
+_stock_data_cache = {}
+_CACHE_TTL_SECONDS = 90  # 90 second cache for fast re-renders
+
 def get_stock_data(ticker, period="1mo"):
     """
-    Fetches stock data.
+    Fetches stock data with in-memory TTL caching.
     FIXED for INR Stocks: Uses stock.fast_info to bypass timezone cutoff bugs in yfinance history.
     """
+    cache_key = f"{ticker.upper()}_{period}"
+    now = time.time()
+    if cache_key in _stock_data_cache:
+        cached_timestamp, cached_data = _stock_data_cache[cache_key]
+        if now - cached_timestamp < _CACHE_TTL_SECONDS:
+            return cached_data
+
     try:
         stock = yf.Ticker(ticker)
         
@@ -208,6 +213,7 @@ def get_stock_data(ticker, period="1mo"):
             },
             'news': news_list
         }
+        _stock_data_cache[cache_key] = (now, data)
         return data
 
     except Exception as e:

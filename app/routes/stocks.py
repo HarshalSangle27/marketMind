@@ -6,12 +6,47 @@ from app.utils.email_service import send_alert_email
 from app.models import Watchlist, StockHistory
 from app import db
 import time
+import concurrent.futures
 from datetime import datetime
 
 stocks_bp = Blueprint('stocks', __name__)
 
 # --- GLOBAL CACHE ---
 cache = {'data': [], 'news': [], 'health': None, 'last_updated': 0}
+
+def _fetch_single_ticker_info(ticker):
+    try:
+        full_data = get_stock_data(ticker, period="5d")
+        if full_data and 'info' in full_data:
+            if ticker == 'BTC-USD':
+                full_data['info']['name'] = 'Bitcoin'
+            return full_data['info']
+    except Exception as e:
+        print(f"[WARNING] Failed to fetch {ticker}: {e}")
+    return None
+
+def _fetch_recent_stock_info(record):
+    try:
+        sd = get_stock_data(record.symbol, period="1d")
+        if sd:
+            new_price = sd['info']['raw_price']
+            old_price = record.price_at_visit or new_price
+            change = new_price - old_price
+            pct_change = (change / old_price * 100) if old_price > 0 else 0
+            
+            return {
+                'symbol': record.symbol,
+                'name': sd['info']['name'],
+                'current_price_str': sd['info']['price'],
+                'old_price_str': f"{sd['info'].get('currency', 'INR')} {round(old_price, 2)}",
+                'change': round(change, 2),
+                'pct_change': round(pct_change, 2),
+                'color': 'text-success' if change >= 0 else 'text-danger',
+                'logo_url': sd['info'].get('logo_url', '')
+            }
+    except Exception as e:
+        print(f"[WARNING] Failed to fetch recent stock {record.symbol}: {e}")
+    return None
 
 @stocks_bp.route('/', methods=['GET', 'POST'])
 def home():
@@ -23,70 +58,43 @@ def home():
     # --- SMART CACHING LOGIC ---
     current_time = time.time()
     
-    # Refresh if cache is empty OR older than 5 minutes
+    # Refresh if cache is empty OR older than 60 seconds
     if not cache['data'] or (current_time - cache['last_updated'] > 60):
         print("[INFO] Downloading Fresh Trending Data...")
         
-        # LIST OF 10 STOCKS (We only use the first 8 that work)
-        # This ensures that if one fails (like Zomato), we have backups.
         potential_tickers = [
             'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS', 
             'ICICIBANK.NS', 'TATAMOTORS.NS', 'SBIN.NS', 'ZOMATO.NS', 
             'AAPL', 'BTC-USD'
         ]
         
-        fresh_data = []
-        for t in potential_tickers:
-            # STOP once we have exactly 8 valid stocks
-            if len(fresh_data) >= 8:
-                break
-                
-            try:
-                # Use "5d" period to ensure we get a valid price change calculation
-                # (Fixes the "0.0%" bug)
-                full_data = get_stock_data(t, period="5d") 
-                
-                if full_data and 'info' in full_data:
-                    if t == 'BTC-USD': full_data['info']['name'] = 'Bitcoin'
-                    fresh_data.append(full_data['info'])
-            except Exception as e:
-                print(f"[WARNING] Failed to fetch {t}: {e}")
-                continue
-        # Fetch Dynamic News
-        cache['news'] = get_market_news(limit=3)
+        # Parallel fetch for trending stocks
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            fetched = list(executor.map(_fetch_single_ticker_info, potential_tickers))
         
-        # Fetch Real Market Health (NIFTY 50)
-        cache['health'] = get_market_health()
+        fresh_data = [item for item in fetched if item is not None][:8]
+
+        # Parallel fetch news & market health
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            future_news = executor.submit(get_market_news, limit=3)
+            future_health = executor.submit(get_market_health)
+            cache['news'] = future_news.result()
+            cache['health'] = future_health.result()
         
-        # Update Cache
         if len(fresh_data) > 0:
             cache['data'] = fresh_data
             cache['last_updated'] = current_time
 
-    # Provide fallback health data if the cache just started and is still empty
+    # Provide fallback health data if cache is empty
     market_health = cache.get('health', {'advances': 34, 'declines': 16, 'adv_pct': 68, 'dec_pct': 32})
 
     recent_stocks = []
     if current_user.is_authenticated:
         history_records = StockHistory.query.filter_by(user_id=current_user.id).order_by(StockHistory.last_visited.desc()).limit(8).all()
-        for record in history_records:
-            sd = get_stock_data(record.symbol, period="1d")
-            if sd:
-                new_price = sd['info']['raw_price']
-                old_price = record.price_at_visit or new_price
-                change = new_price - old_price
-                pct_change = (change / old_price * 100) if old_price > 0 else 0
-                
-                recent_stocks.append({
-                    'symbol': record.symbol,
-                    'name': sd['info']['name'],
-                    'current_price_str': sd['info']['price'],
-                    'old_price_str': f"{sd['info'].get('currency', 'INR')} {round(old_price, 2)}",
-                    'change': round(change, 2),
-                    'pct_change': round(pct_change, 2),
-                    'color': 'text-success' if change >= 0 else 'text-danger',
-                    'logo_url': sd['info'].get('logo_url', '')
-                })
+        if history_records:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(history_records), 8)) as executor:
+                recent_results = list(executor.map(_fetch_recent_stock_info, history_records))
+            recent_stocks = [r for r in recent_results if r is not None]
 
     return render_template('index.html', trending_stocks=cache['data'], market_news=cache['news'], market_health=market_health, recent_stocks=recent_stocks)
 
@@ -191,6 +199,22 @@ def predict(ticker):
 # --- GLOBAL AI PICKS CACHE ---
 ai_cache = {'picks': [], 'last_updated': 0}
 
+def _process_ai_pick(ticker):
+    try:
+        analysis = analyze_stock(ticker, period="6mo")
+        if analysis:
+            sd = get_stock_data(ticker, period="1d")
+            if sd:
+                analysis['name'] = sd['info']['name']
+                analysis['logo_url'] = sd['info'].get('logo_url', '')
+            else:
+                analysis['name'] = ticker.replace('.NS', '')
+                analysis['logo_url'] = ''
+            return analysis
+    except Exception as e:
+        print(f"Error analyzing {ticker}: {e}")
+    return None
+
 @stocks_bp.route('/ai-picks')
 def ai_picks():
     current_time = time.time()
@@ -198,21 +222,10 @@ def ai_picks():
     if not ai_cache['picks'] or (current_time - ai_cache['last_updated'] > 3600):
         print("[INFO] Generating AI Top Picks...")
         tickers_to_analyze = ['TCS.NS', 'RELIANCE.NS', 'HDFCBANK.NS', 'LT.NS', 'ITC.NS', 'INFY.NS', 'TATAMOTORS.NS', 'SBIN.NS']
-        results = []
-        for ticker in tickers_to_analyze:
-            try:
-                analysis = analyze_stock(ticker, period="6mo")
-                if analysis:
-                    sd = get_stock_data(ticker, period="1d")
-                    if sd:
-                        analysis['name'] = sd['info']['name']
-                        analysis['logo_url'] = sd['info'].get('logo_url', '')
-                    else:
-                        analysis['name'] = ticker.replace('.NS', '')
-                        analysis['logo_url'] = ''
-                    results.append(analysis)
-            except Exception as e:
-                print(f"Error analyzing {ticker}: {e}")
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            res = list(executor.map(_process_ai_pick, tickers_to_analyze))
+        results = [r for r in res if r is not None]
                 
         def verdict_score(v):
             if v == "STRONG BUY": return 4
@@ -231,6 +244,17 @@ def ai_picks():
 # --- GLOBAL MUTUAL FUNDS CACHE ---
 mf_cache = {'picks': [], 'last_updated': 0}
 
+def _process_mf_pick(fund):
+    try:
+        analysis = analyze_mutual_fund(fund['ticker'])
+        if analysis:
+            fund_copy = fund.copy()
+            fund_copy.update(analysis)
+            return fund_copy
+    except Exception as e:
+        print(f"Error analyzing {fund['name']}: {e}")
+    return None
+
 @stocks_bp.route('/mutual-funds-picks')
 def mutual_funds_picks():
     current_time = time.time()
@@ -239,7 +263,6 @@ def mutual_funds_picks():
     if not mf_cache['picks'] or (current_time - mf_cache['last_updated'] > 43200):
         print("[INFO] Analyzing Mutual Funds data...")
         
-        # Indian Mutual Fund Tickers on Yahoo Finance (Expanded to ensure robustness)
         target_funds = [
             {'ticker': '0P0000YWL1.BO', 'name': 'Parag Parikh Flexi Cap Fund', 'category': 'Flexi Cap'},
             {'ticker': '0P0000XV99.BO', 'name': 'ICICI Pru Nifty 50 Index Fund', 'category': 'Index'},
@@ -253,15 +276,9 @@ def mutual_funds_picks():
             {'ticker': 'MON100.NS', 'name': 'Motilal Oswal Nasdaq 100 ETF', 'category': 'Intl ETF'}
         ]
         
-        results = []
-        for fund in target_funds:
-            try:
-                analysis = analyze_mutual_fund(fund['ticker'])
-                if analysis:
-                    fund.update(analysis) # Merge metrics into fund dict
-                    results.append(fund)
-            except Exception as e:
-                print(f"Error analyzing {fund['name']}: {e}")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            res = list(executor.map(_process_mf_pick, target_funds))
+        results = [r for r in res if r is not None]
                 
         # Sort by highest CAGR
         results.sort(key=lambda x: x.get('cagr', 0), reverse=True)

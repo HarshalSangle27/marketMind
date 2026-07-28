@@ -2,26 +2,25 @@
 {% block body_class %}body-home{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-lg-5 px-4 py-4 animate-in delay-1">
+<div class="container-fluid px-lg-5 px-md-4 px-3 py-4 animate-in delay-1">
 
     <!-- Top Header Card -->
-    <div class="glass-panel mb-4 p-4 border-0 position-relative overflow-hidden"
+    <div class="glass-panel mb-4 p-3 p-sm-4 border-0 position-relative overflow-hidden"
         style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);">
 
         <div class="row align-items-center position-relative z-1">
-            <div class="col-md-6">
-                <div class="d-flex align-items-center gap-3 mb-2">
-                    <img src="{{ stock_data.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ stock_data.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 shadow" style="width: 56px; height: 56px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
-                    <h1 class="fw-bold mb-0 text-white display-5">{{ stock_data.symbol }}</h1>
+            <div class="col-md-6 col-12 mb-3 mb-md-0">
+                <div class="d-flex align-items-center gap-3 mb-2 flex-wrap">
+                    <img src="{{ stock_data.logo_url }}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ stock_data.name | urlencode }}&length=1&background=random&color=fff&bold=true';" class="rounded-3 shadow" style="width: 48px; height: 48px; object-fit: contain; background: #fff; padding: 4px;" alt="Logo">
+                    <h1 class="fw-bold mb-0 text-white display-6 text-break">{{ stock_data.symbol }}</h1>
                     <span class="badge badge-glass px-3 py-2 text-primary border-primary border-opacity-50"><i
                             class="bi bi-currency-exchange me-1"></i>{{ stock_data.currency }}</span>
                 </div>
-                <p class="text-secondary mb-0 fs-5">{{ stock_data.name }}</p>
+                <p class="text-secondary mb-0 fs-6 text-truncate" style="max-width: 100%;">{{ stock_data.name }}</p>
             </div>
-            <div class="col-md-6 text-md-end mt-4 mt-md-0">
-                <div class="display-3 fw-bold {{ stock_data.color }} mb-1" style="letter-spacing: -1px;">{{
-                    stock_data.price }}</div>
-                <div class="fs-4 {{ stock_data.color }} d-flex align-items-center justify-content-md-end">
+            <div class="col-md-6 col-12 text-md-end text-start mt-2 mt-md-0">
+                <div class="display-5 fw-bold {{ stock_data.color }} mb-1" style="letter-spacing: -0.5px;">{{ stock_data.price }}</div>
+                <div class="fs-5 {{ stock_data.color }} d-flex align-items-center justify-content-md-end">
                     <div
                         class="badge bg-{{ 'success' if 'success' in stock_data.color else 'danger' }} bg-opacity-10 py-2 px-3 rounded-pill border border-{{ 'success' if 'success' in stock_data.color else 'danger' }} border-opacity-25 d-inline-flex align-items-center">
                         {% if 'success' in stock_data.color %} <i class="bi bi-graph-up-arrow me-2"></i> {% else %} <i
@@ -34,7 +33,7 @@
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-8">
+        <div class="col-lg-8 col-12">
 
             <!-- Chart Panel -->
             <div class="glass-panel mb-4 animate-in delay-2">
@@ -53,7 +52,7 @@
                             class="btn btn-sm btn-outline-secondary border-0 load-trigger {% if current_period == '1y' %}active text-white bg-primary bg-opacity-25{% endif %}">1Y</a>
                     </div>
                 </div>
-                <div style="height: 400px; width: 100%; position: relative;">
+                <div style="height: clamp(280px, 45vh, 400px); width: 100%; position: relative;">
                     {% if chart_data %}
                     <canvas id="stockChart"></canvas>
                     {% else %}
