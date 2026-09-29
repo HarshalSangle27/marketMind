@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_required, current_user
-from app.utils.fetcher import get_stock_data, get_market_health
+from app.utils.fetcher import get_stock_data, get_market_news, get_market_health
 from app.utils.ml_engine import analyze_stock, get_market_news, analyze_global_sentiment, analyze_mutual_fund
 from app.utils.email_service import send_alert_email
 from app.models import Watchlist, StockHistory
@@ -8,6 +8,8 @@ from app import db
 import time
 import concurrent.futures
 from datetime import datetime
+import re
+from urllib.parse import urlparse, urljoin
 
 stocks_bp = Blueprint('stocks', __name__)
 
@@ -48,12 +50,33 @@ def _fetch_recent_stock_info(record):
         print(f"[WARNING] Failed to fetch recent stock {record.symbol}: {e}")
     return None
 
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
+def safe_redirect(target, **kwargs):
+    if not is_safe_url(target):
+        abort(400)
+    return redirect(target, **kwargs)
+
+def sanitize_ticker(ticker):
+    if not ticker:
+        return None
+    # Allow alphanumeric characters, dots, dashes, and underscores
+    if re.fullmatch(r'[A-Za-z0-9._-]+', ticker):
+        return ticker
+    return None
+
 @stocks_bp.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
         ticker = request.form.get('ticker')
-        if ticker:
-            return redirect(url_for('stocks.dashboard', ticker=ticker.upper()))
+        sanitized = sanitize_ticker(ticker)
+        if sanitized:
+            return safe_redirect(url_for('stocks.dashboard', ticker=sanitized.upper()))
+        else:
+            flash("Invalid ticker symbol.", "danger")
     
     # --- SMART CACHING LOGIC ---
     current_time = time.time()
@@ -110,7 +133,7 @@ def dashboard(ticker):
     
     if not stock_data:
         flash(f"Could not fetch data for {ticker}", "danger")
-        return redirect(url_for('stocks.home'))
+        return safe_redirect(url_for('stocks.home'))
 
     # Sync fresh price to home page cache to ensure consistency
     for i, cached_item in enumerate(cache['data']):
@@ -162,7 +185,7 @@ def predict(ticker):
     
     if not analysis:
         flash(f"Not enough data to generate prediction for {ticker} ({period})", "warning")
-        return redirect(url_for('stocks.dashboard', ticker=ticker))
+        return safe_redirect(url_for('stocks.dashboard', ticker=ticker))
         
     # Append logo_url and name
     sd = get_stock_data(ticker, period="1d")
@@ -186,7 +209,7 @@ def predict(ticker):
         else:
             flash(f'You are already subscribed to {ticker}.', 'info')
         
-        return redirect(url_for('stocks.predict', ticker=ticker, period=period))
+        return safe_redirect(url_for('stocks.predict', ticker=ticker, period=period))
 
     # 4. Check Subscription
     is_subscribed = False
@@ -281,40 +304,4 @@ def mutual_funds_picks():
         results = [r for r in res if r is not None]
                 
         # Sort by highest CAGR
-        results.sort(key=lambda x: x.get('cagr', 0), reverse=True)
-        
-        if results:
-            mf_cache['picks'] = results
-            mf_cache['last_updated'] = current_time
-
-    return render_template('mutual_funds_picks.html', mf_picks=mf_cache['picks'])
-
-# --- GLOBAL SENTIMENT CACHE ---
-sentiment_cache = {'data': None, 'last_updated': 0}
-
-@stocks_bp.route('/sentiment')
-def sentiment():
-    current_time = time.time()
-    
-    if not sentiment_cache['data'] or (current_time - sentiment_cache['last_updated'] > 3600):
-        print("[INFO] Generating Global Sentiment Data...")
-        sentiment_data = analyze_global_sentiment()
-        
-        # If fetch fails, keep old data if it exists, otherwise provide a neutral fallback
-        if sentiment_data:
-            sentiment_cache['data'] = sentiment_data
-            sentiment_cache['last_updated'] = current_time
-        elif not sentiment_cache['data']:
-            # Fallback
-            sentiment_cache['data'] = {
-                'overall_score': 50,
-                'top_factors': [],
-                'positive_count': 0,
-                'negative_count': 0
-            }
-            
-    return render_template('sentiment.html', data=sentiment_cache['data'])
-
-@stocks_bp.route('/strategies')
-def strategies():
-    return render_template('strategies.html')
+        results.sort(key=lambda x: x.get
