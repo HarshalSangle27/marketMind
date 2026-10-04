@@ -8,11 +8,38 @@ from app import db
 import time
 import concurrent.futures
 from datetime import datetime
+import re
 
 stocks_bp = Blueprint('stocks', __name__)
 
 # --- GLOBAL CACHE ---
 cache = {'data': [], 'news': [], 'health': None, 'last_updated': 0}
+
+def _is_valid_ticker(ticker):
+    """
+    Validates if the ticker symbol is safe and follows expected patterns.
+    Prevents open redirects and injection attempts.
+    """
+    if not ticker:
+        return False
+    
+    # Remove whitespace
+    ticker = ticker.strip()
+    
+    # Basic length check
+    if len(ticker) < 1 or len(ticker) > 20:
+        return False
+        
+    # Allowed characters: Alphanumeric, dot, hyphen, underscore
+    # This prevents slashes, spaces, and other characters that could be used for path traversal or open redirects
+    if not re.match(r'^[A-Za-z0-9.\-_]+$', ticker):
+        return False
+        
+    # Ensure it doesn't start with a dot or hyphen
+    if ticker.startswith('.') or ticker.startswith('-'):
+        return False
+        
+    return True
 
 def _fetch_single_ticker_info(ticker):
     try:
@@ -53,7 +80,12 @@ def home():
     if request.method == 'POST':
         ticker = request.form.get('ticker')
         if ticker:
-            return redirect(url_for('stocks.dashboard', ticker=ticker.upper()))
+            ticker = ticker.upper().strip()
+            if _is_valid_ticker(ticker):
+                return redirect(url_for('stocks.dashboard', ticker=ticker))
+            else:
+                flash("Invalid ticker symbol.", "danger")
+                return redirect(url_for('stocks.home'))
     
     # --- SMART CACHING LOGIC ---
     current_time = time.time()
@@ -102,8 +134,18 @@ def home():
 def dashboard(ticker):
     ticker = ticker.upper().strip()
     
+    # Validate ticker to prevent open redirects and invalid inputs
+    if not _is_valid_ticker(ticker):
+        flash("Invalid ticker symbol.", "danger")
+        return redirect(url_for('stocks.home'))
+    
     # 1. Get Time Period (Default to 1mo)
     period = request.args.get('period', '1mo')
+    
+    # Validate period to prevent unexpected behavior
+    valid_periods = ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']
+    if period not in valid_periods:
+        period = '1mo'
     
     # 2. Fetch Data
     stock_data = get_stock_data(ticker, period=period)
@@ -142,6 +184,11 @@ def dashboard(ticker):
 @login_required
 def remove_history(ticker):
     ticker = ticker.upper().strip()
+    
+    # Validate ticker
+    if not _is_valid_ticker(ticker):
+        return jsonify({'success': False, 'message': 'Invalid ticker'}), 400
+
     history = StockHistory.query.filter_by(user_id=current_user.id, symbol=ticker).first()
     if history:
         db.session.delete(history)
@@ -154,8 +201,18 @@ def remove_history(ticker):
 def predict(ticker):
     ticker = ticker.upper().strip()
     
+    # Validate ticker
+    if not _is_valid_ticker(ticker):
+        flash("Invalid ticker symbol.", "danger")
+        return redirect(url_for('stocks.home'))
+    
     # 1. Get Period for AI
-    period = request.args.get('period', '6mo') 
+    period = request.args.get('period', '6mo')
+    
+    # Validate period
+    valid_periods = ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']
+    if period not in valid_periods:
+        period = '6mo'
 
     # 2. Run Analysis
     analysis = analyze_stock(ticker, period=period)
