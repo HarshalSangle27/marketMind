@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_required, current_user
 from app.utils.fetcher import get_stock_data, get_market_health
 from app.utils.ml_engine import analyze_stock, get_market_news, analyze_global_sentiment, analyze_mutual_fund
@@ -8,11 +8,16 @@ from app import db
 import time
 import concurrent.futures
 from datetime import datetime
+import re
 
 stocks_bp = Blueprint('stocks', __name__)
 
 # --- GLOBAL CACHE ---
 cache = {'data': [], 'news': [], 'health': None, 'last_updated': 0}
+
+def _is_valid_ticker(ticker):
+    """Validate ticker against a strict allowlist."""
+    return bool(re.fullmatch(r'[A-Za-z0-9.\-]+', ticker))
 
 def _fetch_single_ticker_info(ticker):
     try:
@@ -53,7 +58,11 @@ def home():
     if request.method == 'POST':
         ticker = request.form.get('ticker')
         if ticker:
-            return redirect(url_for('stocks.dashboard', ticker=ticker.upper()))
+            ticker = ticker.upper().strip()
+            if not _is_valid_ticker(ticker):
+                flash("Invalid ticker symbol.", "danger")
+                return redirect(url_for('stocks.home'))
+            return redirect(url_for('stocks.dashboard', ticker=ticker))
     
     # --- SMART CACHING LOGIC ---
     current_time = time.time()
@@ -101,6 +110,9 @@ def home():
 @stocks_bp.route('/dashboard/<ticker>')
 def dashboard(ticker):
     ticker = ticker.upper().strip()
+    if not _is_valid_ticker(ticker):
+        flash("Invalid ticker symbol.", "danger")
+        return redirect(url_for('stocks.home'))
     
     # 1. Get Time Period (Default to 1mo)
     period = request.args.get('period', '1mo')
@@ -142,6 +154,8 @@ def dashboard(ticker):
 @login_required
 def remove_history(ticker):
     ticker = ticker.upper().strip()
+    if not _is_valid_ticker(ticker):
+        return jsonify({'success': False, 'message': 'Invalid ticker'}), 400
     history = StockHistory.query.filter_by(user_id=current_user.id, symbol=ticker).first()
     if history:
         db.session.delete(history)
@@ -153,6 +167,9 @@ def remove_history(ticker):
 @login_required
 def predict(ticker):
     ticker = ticker.upper().strip()
+    if not _is_valid_ticker(ticker):
+        flash("Invalid ticker symbol.", "danger")
+        return redirect(url_for('stocks.dashboard', ticker=ticker))
     
     # 1. Get Period for AI
     period = request.args.get('period', '6mo') 
@@ -300,21 +317,4 @@ def sentiment():
         print("[INFO] Generating Global Sentiment Data...")
         sentiment_data = analyze_global_sentiment()
         
-        # If fetch fails, keep old data if it exists, otherwise provide a neutral fallback
-        if sentiment_data:
-            sentiment_cache['data'] = sentiment_data
-            sentiment_cache['last_updated'] = current_time
-        elif not sentiment_cache['data']:
-            # Fallback
-            sentiment_cache['data'] = {
-                'overall_score': 50,
-                'top_factors': [],
-                'positive_count': 0,
-                'negative_count': 0
-            }
-            
-    return render_template('sentiment.html', data=sentiment_cache['data'])
-
-@stocks_bp.route('/strategies')
-def strategies():
-    return render_template('strategies.html')
+        # If fetch fails, keep old data if it exists,
