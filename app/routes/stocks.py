@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_required, current_user
 from app.utils.fetcher import get_stock_data, get_market_health
 from app.utils.ml_engine import analyze_stock, get_market_news, analyze_global_sentiment, analyze_mutual_fund
@@ -8,6 +8,7 @@ from app import db
 import time
 import concurrent.futures
 from datetime import datetime
+import re
 
 stocks_bp = Blueprint('stocks', __name__)
 
@@ -48,12 +49,20 @@ def _fetch_recent_stock_info(record):
         print(f"[WARNING] Failed to fetch recent stock {record.symbol}: {e}")
     return None
 
+def _is_valid_ticker(ticker):
+    """Validate ticker against a strict allowlist: alphanumerics, dots, hyphens."""
+    return bool(re.fullmatch(r'[A-Za-z0-9.\-]+', ticker))
+
 @stocks_bp.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
         ticker = request.form.get('ticker')
         if ticker:
-            return redirect(url_for('stocks.dashboard', ticker=ticker.upper()))
+            ticker = ticker.upper().strip()
+            if not _is_valid_ticker(ticker):
+                flash("Invalid ticker symbol provided.", "danger")
+                return redirect(url_for('stocks.home'))
+            return redirect(url_for('stocks.dashboard', ticker=ticker))
     
     # --- SMART CACHING LOGIC ---
     current_time = time.time()
@@ -101,6 +110,8 @@ def home():
 @stocks_bp.route('/dashboard/<ticker>')
 def dashboard(ticker):
     ticker = ticker.upper().strip()
+    if not _is_valid_ticker(ticker):
+        abort(400, description="Invalid ticker symbol.")
     
     # 1. Get Time Period (Default to 1mo)
     period = request.args.get('period', '1mo')
@@ -142,6 +153,8 @@ def dashboard(ticker):
 @login_required
 def remove_history(ticker):
     ticker = ticker.upper().strip()
+    if not _is_valid_ticker(ticker):
+        abort(400, description="Invalid ticker symbol.")
     history = StockHistory.query.filter_by(user_id=current_user.id, symbol=ticker).first()
     if history:
         db.session.delete(history)
@@ -153,6 +166,8 @@ def remove_history(ticker):
 @login_required
 def predict(ticker):
     ticker = ticker.upper().strip()
+    if not _is_valid_ticker(ticker):
+        abort(400, description="Invalid ticker symbol.")
     
     # 1. Get Period for AI
     period = request.args.get('period', '6mo') 
