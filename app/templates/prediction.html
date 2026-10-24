@@ -103,6 +103,7 @@
                     <p class="text-secondary small mb-0">Receiving daily AI reports for {{ data.symbol }}</p>
                 {% else %}
                     <form method="POST" action="{{ url_for('stocks.predict', ticker=data.symbol, period=current_period) }}" class="no-loader">
+                        {% csrf_token %}
                         <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fs-6 fw-bold d-flex align-items-center justify-content-center shadow-lg"><i class="bi bi-bell-fill me-2 fs-5"></i> Enable Daily Alerts</button>
                     </form>
                     <small class="text-secondary d-block mt-3 opacity-75">Get AI predictions delivered to your inbox</small>
